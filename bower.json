@@ -1,0 +1,29 @@
+{
+  "name": "myExpApp",
+  "version": "0.0.0",
+  "homepage": "localhost:1992",
+  "authors": [
+    "Anshul Singh <anshul@neevtech.com>"
+  ],
+  "moduleType": [
+    "node"
+  ],
+  "keywords": [
+    "express",
+    "socket.io",
+    "handlebars",
+    "chat",
+    "app"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.6"
+  }
+}
