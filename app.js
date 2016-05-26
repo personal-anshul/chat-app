@@ -36,7 +36,10 @@ app.use(express.json());
 app.use(methodOverride());
 app.use(express.cookieParser());
 app.use(session({
-  secret:"123!@#456$%^789&*(0)"
+  secret:"123!@#456$%^789&*(0)",
+  resave: false,
+  saveUninitialized: false,
+  maxAge: 50 * 60 * 1000
 }));
 app.use(app.router);
 app.use(require('less-middleware')(path.join(__dirname, 'public')));
@@ -52,15 +55,24 @@ serve.listen(app.get('port'), function () {
 //routes
 app.get('/', function (req, res) {
   sess = req.session;
-  console.log("sess.userIdentity: " + sess.userIdentity);
-  if(sess.userIdentity) {
+  console.log("sess.userIdentity: " + req.app.get('userInfo').name);
+  if(req.app.get('userInfo').name) {
     res.redirect('/chat');
   }
   else {
     res.render('index', { title: 'Chat App' });
   }
 });
-app.get('/chat', chat.chatApp);
+app.get('/chat',function (req, res) {
+  console.log("sess.userIdentity: " + req.app.get('userInfo').name);
+  if(req.app.get('userInfo').name) {
+    var userName = req.app.get('userInfo');
+    res.render('chat', { title: 'Chat App', loggedInUser: userName.name });
+  }
+  else {
+    res.redirect('/');
+  }
+});
 app.post('/', function(req, res) {
   //handle user info on form submission
   sess = req.session;
@@ -147,7 +159,6 @@ ioSocket.on('connection', function (socket) {
 
     //socket chat event handler
     socket.on('chat', function (message) {
-      console.log('flow app.js chat');
       MongoClient.connect(url, function (err, db) {
         if(err){
           console.warn(err.message);
