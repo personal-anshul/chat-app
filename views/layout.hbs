@@ -9,7 +9,10 @@
   </head>
   <body>
     <header class="col-xs-12 header">
-      <h1>{{title}}<sup>&copy;</sup></h1>
+      <div class="col-xs-10"><h1>{{title}}<sup>&copy;</sup></h1></div>
+      {{#if loggedInUser}}
+      <div class="col-xs-2 text-right"><h4>Hi {{loggedInUser}} !!!</h4></div>
+      {{/if}}
     </header>
     {{{body}}}
   </body>

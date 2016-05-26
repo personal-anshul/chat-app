@@ -1,1 +1,1 @@
-# node-app
+# node chat app

@@ -1,6 +1,6 @@
 //dependencies
-var socket = io();
-var username = {
+var socket = io(),
+  username = {
   user_id: null,
   name: null
 };
@@ -19,7 +19,7 @@ $('#btn-send-message').on("click", function () {
   msg.user_id = username.user_id;
   if(msg.content !== "") {
     socket.emit('chat', msg);
-    $('#messages').append($('<p class="para-message">').html("<b>" + username.user_id + ": </b>" +  msg.content));
+    $('#messages').append($('<p class="para-message">').html("<b>" + msg.user_id + ": </b>" +  msg.content));
     $('#input-message').val('');
   }
   return false;
@@ -48,5 +48,5 @@ $('.radio-user').on("change", function () {
 //load chats
 socket.on('chat', function (data) {
   username.user_id = data.user_id;
-  $('#messages').append($('<p class="para-message">').html("<b>" + data.user_id + ": </b>" + data.content));
+  $('#messages').prepend($('<p class="para-message">').html("<b>" + username.user_id + ": </b>" + data.content));
 });
