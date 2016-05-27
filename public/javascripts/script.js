@@ -34,14 +34,12 @@ $('#input-message').on("keypress", function(event) {
 
 $('.radio-user').on("change", function () {
   if($('.radio-new-user').is(":checked")) {
-    $('#user-id').attr("disabled", "disabled");
-    $('#user-name').removeAttr("disabled");
-    $('#user-location').removeAttr("disabled");
+    $('#form-new-user').show();
+    $('#form-existing-user').hide();
   }
   else if($('.radio-existing-user').is(":checked")) {
-    $('#user-id').removeAttr("disabled");
-    $('#user-name').attr("disabled", "disabled");
-    $('#user-location').attr("disabled", "disabled");
+    $('#form-existing-user').show();
+    $('#form-new-user').hide();
   }
 });
 

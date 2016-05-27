@@ -12,11 +12,6 @@ var express = require('express'),
   MongoClient = require('mongodb').MongoClient,
   //express initialization
   app = express(),
-  //login used id
-  users = {
-    user_id: null,
-    name: null
-  },
   msg  = {
     content: null,
     user_id: null
@@ -24,10 +19,30 @@ var express = require('express'),
   //session variable
   sess;
 
+//generic method to get if given variable has some value
+function isValid(value) {
+  if(value == "" || value == null || value == undefined) {
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
+/*Global variable*/
+//used info
+users = {
+  user_id: null,
+  name: null
+};
+//validation msg
+errorMessage = null;
+
 // view engine setup
 app.set('port', 1992);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
+
 //express configuration
 app.use(express.favicon());
 app.use(express.logger('dev'));
@@ -53,26 +68,8 @@ serve.listen(app.get('port'), function () {
 });
 
 //routes
-app.get('/', function (req, res) {
-  sess = req.session;
-  console.log("sess.userIdentity: " + req.app.get('userInfo').name);
-  if(req.app.get('userInfo').name) {
-    res.redirect('/chat');
-  }
-  else {
-    res.render('index', { title: 'Chat App' });
-  }
-});
-app.get('/chat',function (req, res) {
-  console.log("sess.userIdentity: " + req.app.get('userInfo').name);
-  if(req.app.get('userInfo').name) {
-    var userName = req.app.get('userInfo');
-    res.render('chat', { title: 'Chat App', loggedInUser: userName.name });
-  }
-  else {
-    res.redirect('/');
-  }
-});
+app.get('/', routes.index);
+app.get('/chat', chat.chatMsg);
 app.post('/', function(req, res) {
   //handle user info on form submission
   sess = req.session;
@@ -80,14 +77,14 @@ app.post('/', function(req, res) {
   users.name = req.body.userName;
   msg.user_id = users.user_id;
   var url = 'mongodb://localhost:27017/chat_app',
-    location = req.body.userLocation;
+    password = isValid(req.body.userPassword) ? req.body.userPassword : req.body.userNewPassword;
   MongoClient.connect(url, function (err, db) {
     if(err){
       console.warn(err.message);
     }
     else {
       var collection = db.collection('user_info');
-      if(users.user_id == "" || users.user_id == null || users.user_id == undefined) {
+      if(!isValid(users.user_id)) {
         var userData = collection.find().sort({"_id": -1}).limit(1).stream();
         userData.on("data", function(item) {
           users.user_id = (item.user_id.toString().indexOf('_') == -1 ? 0 : item.user_id.split('_')[1]);
@@ -95,43 +92,46 @@ app.post('/', function(req, res) {
           collection.insert({
             user_id: users.name + "_" + users.user_id,
             user_name: users.name,
-            location: location,
+            password: password,
             date: new Date().valueOf()
             }, function (err, o) {
                if (err) {
                  console.warn(err.message);
                }
                else {
-                 userData = null; collection = null;
                  console.info("user inserted into db: " + users.user_id);
                  // sets a cookie with the user's info
                  if(sess) {
                    sess.userIdentity =  users.name + "_" + users.user_id;
                  }
-                 console.log("sess.userIdentity: " + sess.userIdentity);
                }
            });
         });
       }
       else {
-        var userName = collection.find({"user_id": users.user_id}, {"user_name": 1, "_id": 0}).stream();
-        userName.on("data", function(item) {
-          users.name = item.user_name;
-          console.info("user already exists in db: " + users.name);
-          // sets a cookie with the user's info
-          if(sess) {
-            sess.userIdentity = users.user_id;
+        var userRecord = collection.find({"user_id": users.user_id}, {"user_name": 1, "password": 1, "_id": 0}).stream();
+        errorMessage = 'User doesn\'t exists. Try again.';
+        userRecord.on("data", function(item) {
+          if(item.password == password) {
+            errorMessage = "";
+            users.name = item.user_name;
+            console.info("user already exists in db: " + users.name);
+            // sets a cookie with the user's info
+            if(sess) {
+              sess.userIdentity = users.user_id;
+            }
           }
-          console.log("sess.userIdentity: " + sess.userIdentity);
+          else {
+            console.info("Password doesn't matches with " + password);
+            errorMessage = 'User ID and Password doesn\'t match. Try again.';
+          }
         });
       }
     }
   });
   res.redirect('/chat');
 });
-app.configure(function() {
-  app.set('userInfo', users);
-});
+
 //io connection event handler
 ioSocket.on('connection', function (socket) {
     console.info('a user connected..');
