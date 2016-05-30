@@ -6,7 +6,7 @@ var express = require('express'),
   path = require('path'),
   cookieParser = require('cookie-parser'),
   methodOverride = require('method-override'),
-  session = require('express-session'),
+  session = require('client-sessions'),
   bodyParser = require('body-parser'),
   //db client
   MongoClient = require('mongodb').MongoClient,
@@ -16,8 +16,12 @@ var express = require('express'),
     content: null,
     user_id: null
   },
-  //session variable
-  sess;
+  sess,
+  //used info
+  users = {
+    user_id: null,
+    name: null
+  };
 
 //generic method to get if given variable has some value
 function isValid(value) {
@@ -30,11 +34,6 @@ function isValid(value) {
 }
 
 /*Global variable*/
-//used info
-users = {
-  user_id: null,
-  name: null
-};
 //validation msg
 errorMessage = null;
 
@@ -52,9 +51,9 @@ app.use(methodOverride());
 app.use(express.cookieParser());
 app.use(session({
   secret:"123!@#456$%^789&*(0)",
-  resave: false,
-  saveUninitialized: false,
-  maxAge: 50 * 60 * 1000
+  cookieName: 'session',
+  duration: 10 * 60 * 1000,
+  activeDuration: 2 * 60 * 1000
 }));
 app.use(app.router);
 app.use(require('less-middleware')(path.join(__dirname, 'public')));
@@ -64,20 +63,43 @@ app.use(express.static(path.join(__dirname, 'public')));
 var serve = http.createServer(app),
   ioSocket = require('socket.io')(serve);
 serve.listen(app.get('port'), function () {
-  console.info('Express server listening on port ' + app.get('port'));
+  console.info('Server is listening on port ' + app.get('port'));
 });
 
 //routes
-app.get('/', routes.index);
-app.get('/chat', chat.chatMsg);
+app.get('/', function(req, res) {
+  if(req.session && req.session.userData) {
+    //TO DO : check whether data is valid
+    res.redirect('/chat');
+  }
+  else {
+    res.render('index', { title: 'Login', errorMsg: errorMessage });
+    errorMessage = "";
+  }
+});
+app.get('/chat', function(req, res) {
+  if(req.session && req.session.userData) {
+    errorMessage = "";
+    //TO DO : check whether data is valid
+    res.render('chat', { title: 'Home', user: users });
+  }
+  else {
+    res.redirect('/');
+  }
+});
+app.get('/logout', function(req, res) {
+  req.session.reset();
+  errorMessage = "";
+  res.redirect('/');
+});
 app.post('/', function(req, res) {
   //handle user info on form submission
-  sess = req.session;
   users.user_id = req.body.userID;
   users.name = req.body.userName;
   msg.user_id = users.user_id;
   var url = 'mongodb://localhost:27017/chat_app',
     password = isValid(req.body.userPassword) ? req.body.userPassword : req.body.userNewPassword;
+  //connection with db
   MongoClient.connect(url, function (err, db) {
     if(err){
       console.warn(err.message);
@@ -85,105 +107,102 @@ app.post('/', function(req, res) {
     else {
       var collection = db.collection('user_info');
       if(!isValid(users.user_id)) {
-        var userData = collection.find().sort({"_id": -1}).limit(1).stream();
-        userData.on("data", function(item) {
-          users.user_id = (item.user_id.toString().indexOf('_') == -1 ? 0 : item.user_id.split('_')[1]);
-          users.user_id = parseInt(users.user_id) + 1;
+        collection.findOne({}, {sort:{'_id': -1}},  function(err, lastUser) {
+          var tempId = parseInt(lastUser.user_id.toString().indexOf('_') == -1 ? 0 : lastUser.user_id.toString().split('_')[1]) + 1;
+          users.user_id = users.name.split(' ')[0] + "_" + tempId;
           collection.insert({
-            user_id: users.name + "_" + users.user_id,
+            user_id: users.user_id,
             user_name: users.name,
             password: password,
             date: new Date().valueOf()
             }, function (err, o) {
-               if (err) {
-                 console.warn(err.message);
-               }
-               else {
-                 console.info("user inserted into db: " + users.user_id);
-                 // sets a cookie with the user's info
-                 if(sess) {
-                   sess.userIdentity =  users.name + "_" + users.user_id;
-                 }
-               }
-           });
+              if (err) {
+                console.warn(err.message);
+              }
+              else {
+                console.info("User inserted into db with ID: " + users.user_id);
+                // sets a cookie with the user's info
+                req.session.userData = users;
+                res.redirect('/chat');
+              }
+          });
         });
       }
       else {
-        var userRecord = collection.find({"user_id": users.user_id}, {"user_name": 1, "password": 1, "_id": 0}).stream();
-        errorMessage = 'User doesn\'t exists. Try again.';
-        userRecord.on("data", function(item) {
-          if(item.password == password) {
+        collection.findOne({"user_id": users.user_id}, function(err, user) {
+          errorMessage = 'User doesn\'t exists. Try again.';
+          if(!isValid(user)) {
+            res.redirect('/');
+            return;
+          }
+          if(user.password == password) {
             errorMessage = "";
-            users.name = item.user_name;
-            console.info("user already exists in db: " + users.name);
+            users.name = user.user_name;
+            console.info("User exists in db with name: " + users.name);
             // sets a cookie with the user's info
-            if(sess) {
-              sess.userIdentity = users.user_id;
-            }
+            req.session.userData = users;
+            res.redirect('/chat');
           }
           else {
-            console.info("Password doesn't matches with " + password);
+            console.info("Password doesn't match with " + password + " since it shud be: " + user.password + " for user: " + user.user_name);
             errorMessage = 'User ID and Password doesn\'t match. Try again.';
+            res.redirect('/');
           }
         });
       }
     }
   });
-  res.redirect('/chat');
 });
 
 //io connection event handler
 ioSocket.on('connection', function (socket) {
-    console.info('a user connected..');
-    var url = 'mongodb://localhost:27017/chat_app';
-    MongoClient.connect(url, function (err, db) {
-        if(err){
-            console.warn(err.message);
-        }
-        else {
-          var collectionUser = db.collection('user_info'),
-            collection = db.collection('chat_msg'),
-            stream = collection.find().sort({"_id": -1}).limit(10).stream();
-          stream.on('data', function (chat) {
-            msg.content = chat.content;
-            msg.user_id = chat.user_id;
-            socket.emit('chat', msg);
-          });
-        }
-    });
-
-    //socket disconnect event handler
-    socket.on('disconnect', function () {
-        console.info('user disconnected..');
-    });
-
-    //socket chat event handler
-    socket.on('chat', function (message) {
-      MongoClient.connect(url, function (err, db) {
-        if(err){
-          console.warn(err.message);
-        }
-        else {
-          var collection = db.collection('chat_msg');
-          if(sess) {
-            message.user_id = sess.userIdentity;
-            users.user_id = sess.userIdentity;
-          }
-          collection.insert({
-            content: message.content,
-            user_id: message.user_id,
-            date: new Date().valueOf()
-           }, function (err, o) {
-            if (err) {
-              console.warn(err.message);
-            }
-            else {
-              console.info("chat message inserted into db: " + message.content);
-            }
-          });
-        }
+  console.info('a user connected..');
+  var url = 'mongodb://localhost:27017/chat_app';
+  MongoClient.connect(url, function (err, db) {
+    if(err){
+      console.warn(err.message);
+    }
+    else {
+      var collectionUser = db.collection('user_info'),
+        collection = db.collection('chat_msg'),
+        stream = collection.find().sort({"_id": -1}).limit(10).stream();
+      stream.on('data', function (chat) {
+        msg.content = chat.content;
+        msg.user_id = chat.user_id; //TO DO : need to get user name using this id
+        socket.emit('chat', msg);
       });
-      socket.broadcast.emit('chat', message);
+    }
+  });
+
+  //socket disconnect event handler
+  socket.on('disconnect', function () {
+    console.info('user disconnected..');
+  });
+
+  //socket chat event handler
+  socket.on('chat', function (message) {
+    console.log("chat message- " + message);
+    MongoClient.connect(url, function (err, db) {
+      if(err){
+        console.warn(err.message);
+      }
+      else {
+        var collection = db.collection('chat_msg');
+        collection.insert({
+          content: message.content,
+          user_id: message.user_id,
+          date: new Date().valueOf()
+        }, function (err, o) {
+          if (err) {
+            console.warn(err.message);
+          }
+          else {
+            console.info("chat message inserted into db: " + message.content);
+          }
+        });
+      }
     });
+    socket.broadcast.emit('chat', message);
+  });
 
 });

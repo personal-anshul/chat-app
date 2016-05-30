@@ -10,16 +10,16 @@
           <p style="color: red; font-size: 12px">{{errorMsg}}</p>
           <div class="row col-xs-6">
             <label class="radio-inline">
-              <input type="radio" name="user" class="radio-user radio-new-user" checked />New User
+              <input type="radio" name="user" class="radio-user radio-existing-user" checked />Existing User
             </label>
           </div>
           <div class="row col-xs-6">
             <label class="radio-inline">
-              <input type="radio" name="user" class="radio-user radio-existing-user" />Existing User
+              <input type="radio" name="user" class="radio-user radio-new-user" />New User
             </label>
           </div>
         </div>
-        <form id="form-existing-user" class="hidden-element" action="" method="post">
+        <form id="form-existing-user" action="" method="post">
           <div class="form-group col-xs-12">
             <input id="user-id" name="userID" type="text" class="form-control" value="" placeholder="user id" required/>
           </div>
@@ -31,7 +31,7 @@
             <!-- <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
           </div>
         </form>
-        <form id="form-new-user" action="" method="post">
+        <form id="form-new-user" class="hidden-element" action="" method="post">
           <div class="form-group col-xs-12">
             <input id="user-name" name="userName" type="text" class="form-control" value="" placeholder="user name" required/>
           </div>
