@@ -144,14 +144,23 @@ ioSocket.on('connection', function (socket) {
       console.warn(err.message);
     }
     else {
-      var collectionUser = db.collection('user_info'),
-        collection = db.collection('chat_msg'),
-        stream = collection.find().sort({"_id": -1}).limit(10).stream();
-      stream.on('data', function (chat) {
-        msg.content = chat.content;
-        msg.user_id = chat.user_id;
-        socket.emit('chat', msg);
-      });
+      if(chat.user_id) {
+        db.collection('user_info').findOne({"$query": {"user_id": chat.user_id}}, function(err, user) {
+          if(user) {
+            var collectionUser = db.collection('user_info'),
+              collection = db.collection('chat_msg'),
+              stream = collection.find().sort({"_id": -1}).limit(10).sort({"_id": 1}).stream();
+            stream.on('data', function (chat) {
+              msg.content = chat.content;
+              msg.user_id = chat.user_id;
+              socket.emit('chat', msg);
+            });
+          }
+          else {
+            //TODO: remove session value
+          }
+        });
+      }
     }
   });
 

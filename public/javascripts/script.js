@@ -44,5 +44,5 @@ $('.radio-user').on("change", function () {
 //load chats
 socket.on('chat', function (data) {
   user_id = data.user_id;
-  $('#messages').prepend($('<p class="para-message">').html("<b>" + user_id + ": </b>" + data.content));
+  $('#messages').append($('<p class="para-message">').html("<b>" + user_id + ": </b>" + data.content));
 });

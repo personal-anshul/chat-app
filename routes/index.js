@@ -1,5 +1,5 @@
 /*
- * GET home page.
+ * GET login page.
  */
  exports.index = function(req, res) {
    var user = req.session.user;
@@ -11,6 +11,9 @@
    }
  }
 
+ /*
+  * GET logout feature.
+  */
  exports.logout = function(req, res) {
    req.session.reset();
    res.redirect('/');
