@@ -2,10 +2,11 @@
  * GET user info popup.
  */
 exports.chatMsg = function(req, res) {
-  console.log("user - " + users.name);
-  if(users.name) {
+  var user = req.session.user;
+  if(user) {
+    console.log("user - " + user);
     errorMessage = "";
-    res.render('chat', { title: 'Chat App', loggedInUser: users.name });
+    res.render('chat', { title: 'Chat App', loggedInUser: user });
   }
   else {
     res.redirect('/');

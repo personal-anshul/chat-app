@@ -11,7 +11,7 @@
     <header class="col-xs-12 header">
       <div class="col-xs-10"><h1>{{title}}<sup>&copy;</sup></h1></div>
       {{#if loggedInUser}}
-      <div class="col-xs-2 text-right"><h4>Hi {{loggedInUser}} !!!</h4></div>
+      <div class="col-xs-2 text-right"><h4>Hi <span id="loggedIn-user">{{loggedInUser}}</span> !!! <a href="/logout">logout</a></h4></div>
       {{/if}}
     </header>
     {{{body}}}
