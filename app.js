@@ -139,6 +139,7 @@ app.post('/', function(req, res) {
 ioSocket.on('connection', function (socket) {
   console.info('a user connected..');
   var url = 'mongodb://localhost:27017/chat_app';
+  //TODO: access session value
   MongoClient.connect(url, function (err, db) {
     if(err){
       console.warn(err.message);
