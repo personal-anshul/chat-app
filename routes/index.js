@@ -15,6 +15,6 @@
   * GET logout feature.
   */
  exports.logout = function(req, res) {
-   req.session.reset();
+   req.session.destroy();
    res.redirect('/');
  }
