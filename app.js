@@ -95,7 +95,6 @@ app.post('/', function(req, res) {
       var collection = db.collection('user_info');
       if(!isValid(users.user_id)) {
         collection.findOne({"$query": {}, "$orderby": {"_id": -1}}, function(err, user) {
-          console.log(user);
           var tempId = parseInt(user.user_id.toString().indexOf('_') == -1 ? 0 : user.user_id.split('_')[1]) + 1;
           users.user_id = users.name + "_" + tempId;
           collection.insert({
@@ -148,7 +147,6 @@ app.post('/', function(req, res) {
 ioSocket.on('connection', function (socket) {
   console.info('a user connected..');
   var url = 'mongodb://localhost:27017/chat_app';
-  //TODO: access session value
   MongoClient.connect(url, function (err, db) {
     if(err){
       console.warn(err.message);
