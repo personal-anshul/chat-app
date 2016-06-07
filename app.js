@@ -7,8 +7,6 @@ var express = require('express'),
   cookieParser = require('cookie-parser'),
   methodOverride = require('method-override'),
   bodyParser = require('body-parser'),
-  //session variable
-  session = require('client-sessions'),
   //db client
   MongoClient = require('mongodb').MongoClient,
   //express initialization
@@ -23,6 +21,17 @@ var express = require('express'),
     user_id: null,
     name: null
   };
+
+// initializing express-session middleware
+var Session = require('express-session');
+var SessionStore = require('session-file-store')(Session);
+var session = Session({
+  store: new SessionStore({path: __dirname+'/tmp/sessions'}),
+  secret: '!@#456123$%^789&*()',
+  resave: true,
+  saveUninitialized: true
+});
+
 
 //generic method to check if given variable has some value
 function isValid(value) {
@@ -50,22 +59,22 @@ app.use(express.logger('dev'));
 app.use(express.cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride());
-app.use(session({
-  cookieName: "session",
-  secret:"123!@#456$%^789&*(0)",
-  duration: 10 * 60 * 1000,
-  activeDuration: 2 * 60 * 1000
-}));
+app.use(session); // session support
 app.use(app.router);
 app.use(require('less-middleware')(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 //server
-var serve = http.createServer(app),
-  ioSocket = require('socket.io')(serve);
+var serve = http.createServer(app);
 serve.listen(app.get('port'), function () {
   console.info('Express server listening on port ' + app.get('port'));
 });
+
+
+// creating new socket.io app
+var ios = require('./'),
+  ioSocket = require('socket.io')(serve);
+ioSocket.use(ios(session)); // session support
 
 //routes
 app.get('/', routes.index);
@@ -145,20 +154,23 @@ ioSocket.on('connection', function (socket) {
       console.warn(err.message);
     }
     else {
-      if(chat.user_id) {
-        db.collection('user_info').findOne({"$query": {"user_id": chat.user_id}}, function(err, user) {
+      if(socket.handshake.session.user) {
+        db.collection('user_info').findOne({"$query": {"user_id": socket.handshake.session.user}}, function(err, user) {
           if(user) {
-            var collectionUser = db.collection('user_info'),
-              collection = db.collection('chat_msg'),
-              stream = collection.find().sort({"_id": -1}).limit(10).sort({"_id": 1}).stream();
-            stream.on('data', function (chat) {
-              msg.content = chat.content;
-              msg.user_id = chat.user_id;
-              socket.emit('chat', msg);
+            var collection = db.collection('chat_msg'),
+              cursor = collection.find(),
+              stream = null;
+            cursor.count({}, function(err, c) {
+              stream = cursor.skip(c-10).limit(10).stream();
+              stream.on('data', function (chat) {
+                msg.content = chat.content;
+                msg.user_id = chat.user_id;
+                socket.emit('chat', msg);
+              });
             });
           }
           else {
-            //TODO: remove session value
+            socket.handshake.session.user = null;
           }
         });
       }
@@ -182,7 +194,7 @@ ioSocket.on('connection', function (socket) {
         // users.user_id = sess.userIdentity;
         collection.insert({
           content: message.content,
-          user_id: message.user_id,
+          user_id: socket.handshake.session.user,
           date: new Date().valueOf()
          },
          function (err, o) {
