@@ -33,20 +33,39 @@ $('.radio-user').on("change", function () {
   if($('.radio-new-user').is(":checked")) {
     $('#form-new-user').show();
     $('#form-existing-user').hide();
+    setTimeout(function() {
+      $('#user-name').focus();
+    }, 200);
   }
   else if($('.radio-existing-user').is(":checked")) {
     $('#form-existing-user').show();
     $('#form-new-user').hide();
+    setTimeout(function() {
+      $('#user-id').focus();
+    }, 200);
   }
 });
+
+$('.closePopup').on("click", function () {
+  $('#userId-popup').addClass('modal-userId-close');
+  $('.modal-backdrop').addClass('close-modal-backdrop');
+  $('#input-message').focus();
+  setTimeout(function() {
+    $('.modal-backdrop').hide();
+    $('#loggedIn-user').css({"border": "2px solid #3498DB", "padding": "0 10px", "transition": "all 0.8s linear" });
+  }, 1500);
+  setTimeout(function() {
+    $('#loggedIn-user').css({"border": "2px solid #222", "padding": "0", "transition": "all 1s linear"});
+  }, 3000);
+})
 
 //load chats
 socket.on('event of chat on server', function (data) {
   if($('#loggedIn-user').html() == data.user_id) {
-    $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-push-2 col-xs-10 para-message'><b>" + data.user_id + ": </b>" + data.content + "</div>"));
+    $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.user_id + ": </b>" + data.content + "</div>"));
   }
   else {
-    $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-10 para-message'><b>" + data.user_id + ": </b>" + data.content + "</div>"));
+    $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.user_id + ": </b>" + data.content + "</div>"));
   }
   window.scrollTo(0, document.body.scrollHeight);
 });

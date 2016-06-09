@@ -13,6 +13,7 @@ var express = require('express'),
 /*Global variable*/
 //validation msg
 global.errorMessage = null;
+global.newUser = null;
 global.url = 'mongodb://localhost:27017/chat_app';
 //db client
 global.MongoClient = require('mongodb').MongoClient;
@@ -57,7 +58,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 //server
 var serve = http.createServer(app);
 serve.listen(app.get('port'), function () {
-  console.info('Chat app is running on port ' + app.get('port'));
+  console.info('Windbag is running on port ' + app.get('port'));
 });
 
 // creating socket io app
@@ -102,6 +103,7 @@ app.post('/', function(req, res) {
             else {
               console.info("user inserted into db: " + users.user_id);
               req.session.user = users.user_id;
+              newUser = users.name;
               res.redirect('/chat');
             }
           });

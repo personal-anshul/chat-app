@@ -6,6 +6,7 @@
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,400italic,300' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Indie+Flower' rel='stylesheet' type='text/css'>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script type="text/javascript"  src='/library/jquery/dist/jquery.min.js'></script>
   </head>
   <body>
     <header class="col-xs-12 header">
@@ -16,7 +17,7 @@
           </a>
           {{#if loggedInUser}}
           <div class="col-xs-7 user-detail text-right">
-            <h4>Hi <span id="loggedIn-user">{{loggedInUser}}</span> !!! <a href="/logout">logout</a></h4>
+            <h4 class="userId-detail">Hi <span id="loggedIn-user">{{loggedInUser}}</span> !!! <a href="/logout">logout</a></h4>
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#user-list">
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
@@ -51,7 +52,6 @@
     {{{body}}}
   </body>
 </html>
-<script type="text/javascript"  src='/library/jquery/dist/jquery.min.js'></script>
 <script type="text/javascript"  src='/library/bootstrap/dist/js/bootstrap.min.js'></script>
 <script type="text/javascript" src='/socket.io/socket.io.js'></script>
 <script type="text/javascript" src="/javascripts/script.js"></script>

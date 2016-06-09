@@ -6,5 +6,5 @@ temp/
 tmp/
 node_modules/
 public/library/
-.css
+*.css
 data/
