@@ -17,14 +17,14 @@
            else {
              global.errorMessage = "User has been removed by Admin.";
              req.session.destroy();
-             res.render('index', { title: 'Chat App', errorMsg: global.errorMessage });
+             res.render('index', { title: 'Windbag', errorMsg: global.errorMessage });
            }
          });
        }
      });
    }
    else {
-     res.render('index', { title: 'Chat App', errorMsg: global.errorMessage });
+     res.render('index', { title: 'Windbag', errorMsg: global.errorMessage });
    }
  }
 
