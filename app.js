@@ -7,31 +7,15 @@ var express = require('express'),
   cookieParser = require('cookie-parser'),
   methodOverride = require('method-override'),
   bodyParser = require('body-parser'),
-  //db client
-  MongoClient = require('mongodb').MongoClient,
   //express initialization
-  app = express(),
-  //chat msg
-  msg  = {
-    content: null,
-    user_id: null
-  },
-  //used info
-  users = {
-    user_id: null,
-    name: null
-  };
+  app = express();
 
-// initializing express-session middleware
-var Session = require('express-session');
-var SessionStore = require('session-file-store')(Session);
-var session = Session({
-  store: new SessionStore({path: __dirname+'/tmp/sessions'}),
-  secret: '!@#456123$%^789&*()',
-  resave: true,
-  saveUninitialized: true
-});
-
+/*Global variable*/
+//validation msg
+global.errorMessage = null;
+global.url = 'mongodb://localhost:27017/chat_app';
+//db client
+global.MongoClient = require('mongodb').MongoClient;
 
 //generic method to check if given variable has some value
 function isValid(value) {
@@ -43,9 +27,15 @@ function isValid(value) {
   }
 }
 
-/*Global variable*/
-//validation msg
-errorMessage = null;
+// initializing express-session middleware
+var Session = require('express-session');
+var SessionStore = require('session-file-store')(Session);
+var session = Session({
+  store: new SessionStore({path: __dirname+'/tmp/sessions'}),
+  secret: '!@#456123$%^789&*()',
+  resave: true,
+  saveUninitialized: true
+});
 
 // view engine setup
 app.set('port', 1992);
@@ -59,7 +49,7 @@ app.use(express.logger('dev'));
 app.use(express.cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride());
-app.use(session); // session support
+app.use(session);
 app.use(app.router);
 app.use(require('less-middleware')(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -67,27 +57,29 @@ app.use(express.static(path.join(__dirname, 'public')));
 //server
 var serve = http.createServer(app);
 serve.listen(app.get('port'), function () {
-  console.info('Express server listening on port ' + app.get('port'));
+  console.info('Chat app is running on port ' + app.get('port'));
 });
 
-
-// creating new socket.io app
+// creating socket io app
 var ios = require('./'),
-  ioSocket = require('socket.io')(serve);
-ioSocket.use(ios(session)); // session support
+  ioSocket = require('socket.io')(serve),
+  ioSession = ios(session);
+ioSocket.use(ioSession);
 
 //routes
 app.get('/', routes.index);
 app.get('/logout', routes.logout);
 app.get('/chat', chat.chatMsg);
 app.post('/', function(req, res) {
-  //handle user info on form submission
+  var password = isValid(req.body.userPassword) ? req.body.userPassword : req.body.userNewPassword,
+    //used info
+    users = {
+      user_id: null,
+      name: null
+    };
   users.user_id = req.body.userID;
   users.name = req.body.userName;
-  msg.user_id = users.user_id;
-  var url = 'mongodb://localhost:27017/chat_app',
-    password = isValid(req.body.userPassword) ? req.body.userPassword : req.body.userNewPassword;
-  MongoClient.connect(url, function (err, db) {
+  global.MongoClient.connect(global.url, function (err, db) {
     if(err){
       console.warn(err.message);
     }
@@ -109,7 +101,6 @@ app.post('/', function(req, res) {
             }
             else {
               console.info("user inserted into db: " + users.user_id);
-              // sets a cookie with the user's info
               req.session.user = users.user_id;
               res.redirect('/chat');
             }
@@ -118,19 +109,18 @@ app.post('/', function(req, res) {
       }
       else {
         collection.findOne({"$query": {"user_id": users.user_id}}, function(err, user) {
-          errorMessage = 'User doesn\'t exists. Try again.';
+          global.errorMessage = 'User doesn\'t exists. Try again.';
           if(user) {
             if(user.password == password) {
-              errorMessage = "";
+              global.errorMessage = "";
               users.name = user.user_name;
               console.info("user already exists in db: " + users.name);
-              // sets a cookie with the user's info
               req.session.user = user.user_id;
               res.redirect('/chat');
             }
             else {
               console.info("Password doesn't matches with " + password);
-              errorMessage = 'User ID and Password doesn\'t match. Try again.';
+              global.errorMessage = 'User ID and Password doesn\'t match. Try again.';
               res.redirect('/');
             }
           }
@@ -145,9 +135,8 @@ app.post('/', function(req, res) {
 
 //io connection event handler
 ioSocket.on('connection', function (socket) {
-  console.info('a user connected..');
-  var url = 'mongodb://localhost:27017/chat_app';
-  MongoClient.connect(url, function (err, db) {
+  console.info((socket.handshake.session.user ? socket.handshake.session.user : 'anonymous_user') + ' connected..');
+  global.MongoClient.connect(global.url, function (err, db) {
     if(err){
       console.warn(err.message);
     }
@@ -157,13 +146,18 @@ ioSocket.on('connection', function (socket) {
           if(user) {
             var collection = db.collection('chat_msg'),
               cursor = collection.find(),
-              stream = null;
+              stream = null,
+              //chat msg
+              msg  = {
+                content: null,
+                user_id: null
+              };
             cursor.count({}, function(err, c) {
               stream = cursor.skip(c-10).limit(10).stream();
               stream.on('data', function (chat) {
                 msg.content = chat.content;
                 msg.user_id = chat.user_id;
-                socket.emit('chat', msg);
+                socket.emit('event of chat on server', msg);
               });
             });
           }
@@ -172,39 +166,49 @@ ioSocket.on('connection', function (socket) {
           }
         });
       }
+      else {
+        // socket.emit('no user', socket.handshake.session.user);
+      }
     }
   });
 
   //socket disconnect event handler
   socket.on('disconnect', function () {
-    console.info('user disconnected..');
+    console.info((socket.handshake.session.user ? socket.handshake.session.user : 'anonymous_user') + ' disconnected..');
   });
 
   //socket chat event handler
-  socket.on('chat', function (message) {
-    MongoClient.connect(url, function (err, db) {
+  socket.on('event of chat on client', function (message) {
+    global.MongoClient.connect(global.url, function (err, db) {
       if(err){
         console.warn(err.message);
       }
       else {
-        var collection = db.collection('chat_msg');
-        // message.user_id = sess.userIdentity;
-        // users.user_id = sess.userIdentity;
-        collection.insert({
-          content: message.content,
-          user_id: socket.handshake.session.user,
-          date: new Date().valueOf()
-         },
-         function (err, o) {
-          if (err) {
-            console.warn(err.message);
-          }
-          else {
-            console.info("chat message inserted into db: " + message.content);
-          }
-        });
+        if(socket.handshake.session.user) {
+          db.collection('user_info').findOne({"$query": {"user_id": socket.handshake.session.user}}, function(err, user) {
+            if(user) {
+              var collection = db.collection('chat_msg');
+              collection.insert({
+                content: message.content,
+                user_id: socket.handshake.session.user,
+                date: new Date().valueOf()
+               },
+               function (err, o) {
+                if (err) {
+                  console.warn(err.message);
+                }
+                else {
+                  console.info("chat message inserted into db: " + message.content);
+                  socket.broadcast.emit('event of chat on server', message);
+                }
+              });
+            }
+            else {
+              socket.handshake.session.user = null;
+            }
+          });
+        }
       }
     });
-    socket.broadcast.emit('chat', message);
   });
 });

@@ -3,13 +3,8 @@ body {
   font: 16px "Indie Flower", Helvetica, Arial, sans-serif;
 }
 .header {
-  background-color: #151515;
   color: #fff;
-  margin-bottom: 100px;
-  padding: 10px;
-  position: fixed;
-  z-index: 1;
-  h1 {
+  .app-title {
     margin: 0;
     padding: 0;
   }
@@ -22,19 +17,20 @@ body {
   z-index: 1;
   h3 {
     border-bottom: 10px solid #e1e1e1;
+    margin-bottom: 1px;
     padding: 0 0 5px;
   }
 }
 .main {
   margin: 150px auto 20px;
-  padding: 0 20px;
   .message-panel {
-    margin: 0 -30px 80px -30px;
+    margin: 0 0 80px;
     .para-message {
       background: #d0daf9;
+      border: 1px solid #23527c;
       border-radius: 4px;
+      box-shadow: 1px 0px 150px #9db5bf;
       font-size: 16px;
-      margin-bottom: 10px;
       padding: 5px 15px;
     }
   }
@@ -50,12 +46,16 @@ body {
   font-size: 16px;
   font-weight: bold;
 }
+.error-msg {
+  color: red;
+  font-size: 12px;
+}
 .login-panel {
   margin-top: 120px;
   opacity: 0.85;
 }
 .footer {
-  background: #bdbdbd;
+  background: #bdb996;
   bottom: 0;
   padding: 10px;
   position: fixed;
@@ -69,14 +69,67 @@ body {
 .hidden-element {
   display: none;
 }
+.navbar-header {
+  float: none;
+  .user-detail {
+    margin: 12px 0 10px;
+    padding: 0;
+  }
+  h4 {
+    display: inline-block;
+    margin-top: 14px;
+    margin-right: 10px;
+  }
+}
+.navbar-brand {
+  height: auto;
+}
+.navbar-toggle {
+  display: block;
+  margin-top: 5px;
+}
+.navbar-collapse.collapse {
+  display: none!important;
+  &.in{
+    display:block !important;
+  }
+}
+.navbar-nav {
+  float: none!important;
+  & > li {
+    float: none;
+  }
+}
+.navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {
+  background-color: #333 !important;
+}
+
 @media screen and (max-width: 767px) {
   body {
     background-repeat: repeat;
   }
-.main {
-  margin-top: 80px;
-}
+  .section-greeting {
+    background: none;
+  }
+  .main {
+    margin-top: 80px;
+  }
   .footer {
     padding: 20px 10px 0;
+  }
+}
+
+@media screen and (max-width: 520px) {
+  .header {
+    .navbar-brand {
+      display: none;
+    }
+    .navbar-toggle {
+      float: left;
+      margin-left: 10px;
+    }
+    .user-detail {
+      width: 100% !important;
+    }
   }
 }

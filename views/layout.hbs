@@ -9,10 +9,44 @@
   </head>
   <body>
     <header class="col-xs-12 header">
-      <div class="col-xs-10"><h1>{{title}}<sup>&copy;</sup></h1></div>
-      {{#if loggedInUser}}
-      <div class="col-xs-2 text-right"><h4>Hi <span id="loggedIn-user">{{loggedInUser}}</span> !!! <a href="/logout">logout</a></h4></div>
-      {{/if}}
+      <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="navbar-header">
+          <a class="col-xs-5 navbar-brand" href="#">
+            <div class="col-xs-12"><h1 class="app-title">{{title}}<sup>&copy;</sup></h1></div>
+          </a>
+          {{#if loggedInUser}}
+          <div class="col-xs-7 user-detail text-right">
+            <h4>Hi <span id="loggedIn-user">{{loggedInUser}}</span> !!! <a href="/logout">logout</a></h4>
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#user-list">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+          </div>
+          {{/if}}
+        </div>
+        <div class="collapse navbar-collapse" id="user-list">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Anshul</a></li>
+            <li><a href="#">Praful</a></li>
+            <li><a href="#">Naga</a></li>
+            <!-- <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                Java<b class="caret"></b>
+              </a>
+              <ul class="dropdown-menu">
+                <li><a href="#">jmeter</a></li>
+                <li><a href="#">EJB</a></li>
+                <li><a href="#">Jasper Report</a></li>
+                <li class="divider"></li>
+                <li><a href="#">Separated link</a></li>
+                <li class="divider"></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li> -->
+          </ul>
+        </div>
+      </nav>
     </header>
     {{{body}}}
   </body>

@@ -14,7 +14,7 @@ $('#btn-send-message').on("click", function () {
   msg.content = $('#input-message').val();
   msg.user_id = $('#loggedIn-user').html();
   if(msg.content !== "") {
-    socket.emit('chat', msg);
+    socket.emit('event of chat on client', msg);
     $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-push-2 col-xs-10 para-message'><b>" + msg.user_id + ": </b>" +  msg.content + "</div>"));
     $('#input-message').val('');
   }
@@ -29,6 +29,7 @@ $('#input-message').on("keypress", function(event) {
 });
 
 $('.radio-user').on("change", function () {
+  $('.error-msg').html('');
   if($('.radio-new-user').is(":checked")) {
     $('#form-new-user').show();
     $('#form-existing-user').hide();
@@ -40,7 +41,7 @@ $('.radio-user').on("change", function () {
 });
 
 //load chats
-socket.on('chat', function (data) {
+socket.on('event of chat on server', function (data) {
   if($('#loggedIn-user').html() == data.user_id) {
     $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-push-2 col-xs-10 para-message'><b>" + data.user_id + ": </b>" + data.content + "</div>"));
   }
@@ -49,3 +50,9 @@ socket.on('chat', function (data) {
   }
   window.scrollTo(0, document.body.scrollHeight);
 });
+
+// socket.on('no user', function (event) {
+//   if(window.location.href.indexOf('chat') != -1) {
+//     window.location.href = window.location.href.split('chat')[0];
+//   }
+// });
