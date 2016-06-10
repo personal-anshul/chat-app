@@ -1,8 +1,13 @@
 <section class="col-xs-12 section-greeting">
-  <h3 class="col-md-10 col-sm-12 hidden-xs">Welcome to {{title}}<sup>&reg;</sup></h3>
+  <h3 class="col-md-10 col-sm-12 hidden-xs">
+    <div class="col-xs-6">Welcome to {{title}}<sup>&reg;</sup></div>
+    <div class="load-chat col-xs-6"><a class="pull-right" href="#"><small>load more..</small></a></div>
+    <div class="loaded-chat hide col-xs-6"><small class="pull-right">loaded all chat msgs..</small></div>
+  </h3>
 </section>
 <main class="col-xs-12 main">
   <section class="col-xs-12">
+    <div class="spinner"><div class="glyphicon glyphicon-refresh spinning"></div></div>
     <article id="messages" class="col-xs-12 message-panel"></article>
   </section>
 </main>
@@ -42,5 +47,6 @@
 <script>
   $(document).ready(function(){
     $('#userId-popup').modal('show');
+    $('.spinner').show();
   });
 </script>

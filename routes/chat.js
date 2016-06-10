@@ -28,3 +28,11 @@ exports.chatMsg = function(req, res) {
     res.redirect('/');
   }
 }
+
+/*
+ * GET user info popup.
+ */
+exports.chatLoad = function(req, res) {
+  console.log('loading chat......')
+  res.redirect('/test');
+}
