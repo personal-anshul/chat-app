@@ -1,5 +1,7 @@
 //dependencies
 var socket = io();
+
+//scroll page till bottom
 $(document).ready(function(){
   window.scrollTo(0, document.body.scrollHeight);
 });
@@ -15,19 +17,20 @@ $('#btn-send-message').on("click", function () {
   msg.user_id = $('#loggedIn-user').html();
   if(msg.content !== "") {
     socket.emit('event of chat on client', msg);
-    $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-push-2 col-xs-10 para-message'><b>" + msg.user_id + ": </b>" +  msg.content + "</div>"));
+    $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.user_id + ": </b>" +  msg.content + "</div>"));
     $('#input-message').val('');
   }
   return false;
 });
 
-//bind chat submit if user press enter key
+//bind chat submit if users press enter key
 $('#input-message').on("keypress", function(event) {
   if(event.keyCode === 13) {
     $('#btn-send-message').click();
   }
 });
 
+//show/hode login/signup sections as radio button selected
 $('.radio-user').on("change", function () {
   $('.error-msg').html('');
   if($('.radio-new-user').is(":checked")) {
@@ -46,6 +49,7 @@ $('.radio-user').on("change", function () {
   }
 });
 
+//close user id popup
 $('.closePopup').on("click", function () {
   $('#userId-popup').addClass('modal-userId-close');
   $('.modal-backdrop').addClass('close-modal-backdrop');
@@ -59,7 +63,16 @@ $('.closePopup').on("click", function () {
   }, 3000);
 })
 
-//load chats
+//Load all chat msgs
+$('.load-chat').on("click", function () {
+  $('.spinner').show();
+  $('#messages').html('');
+  $('.loaded-chat').addClass('show');
+  $('.load-chat').addClass('hide');
+  socket.emit('event of load more chats');
+});
+
+//socket handler to load chats
 socket.on('event of chat on server', function (data) {
   if($('#loggedIn-user').html() == data.user_id) {
     $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.user_id + ": </b>" + data.content + "</div>"));
@@ -68,6 +81,13 @@ socket.on('event of chat on server', function (data) {
     $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.user_id + ": </b>" + data.content + "</div>"));
   }
   window.scrollTo(0, document.body.scrollHeight);
+});
+
+//socket handler to hide spinner
+socket.on('hide spinner', function (data) {
+  setTimeout(function () {
+    $('.spinner').hide();
+  }, 1000);
 });
 
 // socket.on('no user', function (event) {

@@ -11,11 +11,9 @@ var express = require('express'),
   app = express();
 
 /*Global variable*/
-//validation msg
 global.errorMessage = null;
 global.newUser = null;
 global.url = 'mongodb://localhost:27017/chat_app';
-//db client
 global.MongoClient = require('mongodb').MongoClient;
 
 //generic method to check if given variable has some value
@@ -45,7 +43,7 @@ app.set('view engine', 'hbs');
 
 //express configuration
 app.use(express.json());
-app.use(express.favicon());
+app.use(express.favicon("public/images/favicon.ico"));
 app.use(express.logger('dev'));
 app.use(express.cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -138,6 +136,7 @@ app.post('/', function(req, res) {
 //io connection event handler
 ioSocket.on('connection', function (socket) {
   console.info((socket.handshake.session.user ? socket.handshake.session.user : 'anonymous_user') + ' connected..');
+  //event handler to load chat on connection
   global.MongoClient.connect(global.url, function (err, db) {
     if(err){
       console.warn(err.message);
@@ -161,25 +160,67 @@ ioSocket.on('connection', function (socket) {
                 msg.user_id = chat.user_id;
                 socket.emit('event of chat on server', msg);
               });
+              socket.emit('hide spinner');
             });
           }
           else {
+            socket.emit('hide spinner');
             socket.handshake.session.user = null;
           }
         });
       }
       else {
+        socket.emit('hide spinner');
         // socket.emit('no user', socket.handshake.session.user);
       }
     }
   });
 
-  //socket disconnect event handler
+  //event handler for socket disconnect
   socket.on('disconnect', function () {
     console.info((socket.handshake.session.user ? socket.handshake.session.user : 'anonymous_user') + ' disconnected..');
   });
 
-  //socket chat event handler
+  //event handler to load all chat messages
+  socket.on('event of load more chats', function () {
+    global.MongoClient.connect(global.url, function (err, db) {
+      if(err){
+        socket.emit('hide spinner');
+        console.warn(err.message);
+      }
+      else {
+        if(socket.handshake.session.user) {
+          db.collection('user_info').findOne({"$query": {"user_id": socket.handshake.session.user}}, function(err, user) {
+            if(user) {
+              var collection = db.collection('chat_msg'),
+                stream = collection.find().stream(),
+                //chat msg
+                chatMsg  = {
+                  content: null,
+                  user_id: null
+                };
+              stream.on('data', function (chat) {
+                chatMsg.content = chat.content;
+                chatMsg.user_id = chat.user_id;
+                socket.emit('event of chat on server', chatMsg);
+              });
+              socket.emit('hide spinner');
+            }
+            else {
+              socket.handshake.session.user = null;
+              socket.emit('hide spinner');
+            }
+          });
+        }
+        else {
+          socket.emit('hide spinner');
+          // socket.emit('no user', socket.handshake.session.user);
+        }
+      }
+    });
+  });
+
+  //event handler to save and broadcast chat messages
   socket.on('event of chat on client', function (message) {
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
