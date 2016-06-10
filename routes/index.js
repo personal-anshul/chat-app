@@ -10,7 +10,7 @@
        }
        else {
          var collection = db.collection('user_info');
-         collection.findOne({"$query": {"user_id": user}}, function(err, isUser) {
+         collection.findOne({"$query": {"userId": user}}, function(err, isUser) {
            if(isUser) {
              res.redirect('/chat');
            }
