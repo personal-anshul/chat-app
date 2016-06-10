@@ -67,7 +67,7 @@ input {
 .footer {
   background: #AEB6BF;
   bottom: 0;
-  padding: 15px 10px 10px;
+  padding: 0 10px 10px;
   position: fixed;
   right: 0;
   z-index: 1;
@@ -153,7 +153,10 @@ input {
     font-weight: bold;
   }
 }
-
+.typing-user-panel {
+  margin-bottom: 5px;
+  text-align: center;
+}
 .spinner {
   background: black;
   bottom: 0;
@@ -164,6 +167,10 @@ input {
   right: 0;
   top: 0;
   z-index: 200;
+}
+#typing-user {
+  display: inline-block;
+  min-height: 10px;
 }
 .glyphicon.spinning {
   animation: spin 0.5s infinite linear;
@@ -204,7 +211,7 @@ input {
     margin-top: 80px;
   }
   .footer {
-    padding: 20px 10px 0;
+    padding: 0 10px 0;
   }
 }
 
