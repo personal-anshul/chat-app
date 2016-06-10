@@ -88,6 +88,11 @@ socket.on('event of chat on server', function (data) {
   window.scrollTo(0, document.body.scrollHeight);
 });
 
+//socket handler to load all users
+socket.on('load all users', function (user) {
+  $('#nav-user-list').append('<li class="user-list-item"><a href="#">' + user.userName + ' (' + user.email + ')</a></li>');
+});
+
 //socket handler to hide spinner
 socket.on('hide spinner', function (data) {
   setTimeout(function () {
