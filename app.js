@@ -189,6 +189,12 @@ ioSocket.on('connection', function (socket) {
     console.info((socket.handshake.session.user ? socket.handshake.session.user : 'anonymous_user') + ' disconnected..');
   });
 
+  //event handler to broadcast info of user who is typing
+  socket.on('get typing userinfo', function () {
+    var userInfoTyping = socket.handshake.session.user;
+    socket.broadcast.emit('update typing userinfo', userInfoTyping);
+  });
+
   //event handler to load all chat messages
   socket.on('event of load more chats', function () {
     global.MongoClient.connect(global.url, function (err, db) {

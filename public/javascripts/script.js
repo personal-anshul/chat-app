@@ -8,7 +8,6 @@ $(document).ready(function(){
 
 //On chat submit
 $('#btn-send-message').on("click", function () {
-  window.scrollTo(0, document.body.scrollHeight);
   var msg  = {
     content: null,
     userId: null
@@ -20,13 +19,17 @@ $('#btn-send-message').on("click", function () {
     $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.userId + ": </b>" +  msg.content + "</div>"));
     $('#input-message').val('');
   }
+  window.scrollTo(0, document.body.scrollHeight);
   return false;
 });
 
-//bind chat submit if users press enter key
+//bind enter key event with input msg field
 $('#input-message').on("keypress", function(event) {
   if(event.keyCode === 13) {
     $('#btn-send-message').click();
+  }
+  else {
+    socket.emit('get typing userinfo');
   }
 });
 
@@ -95,6 +98,14 @@ socket.on('hide spinner', function (data) {
 //socket handler to hide spinner
 socket.on('hide load chat', function (data) {
   $('.load-chat').addClass('hide');
+});
+
+//socket handler to update typing userinfo
+socket.on('update typing userinfo', function (user) {
+  $('#typing-user').html(user + ' is typing..');
+  setTimeout(function () {
+    $('#typing-user').html('');
+  }, 1000);
 });
 
 // socket.on('no user', function (event) {
