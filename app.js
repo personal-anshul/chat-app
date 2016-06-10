@@ -168,8 +168,12 @@ ioSocket.on('connection', function (socket) {
               if(c < 10) {
                 socket.emit('hide load chat');
               }
-              socket.emit('hide spinner');
             });
+            var userStream = db.collection('user_info').find().stream();
+            userStream.on('data', function (user) {
+              socket.emit('load all users', user);
+            });
+            socket.emit('hide spinner');
           }
           else {
             socket.emit('hide spinner');
