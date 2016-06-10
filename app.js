@@ -74,49 +74,53 @@ app.post('/', function(req, res) {
   var password = isValid(req.body.userPassword) ? req.body.userPassword : req.body.userNewPassword,
     //used info
     users = {
-      user_id: null,
-      name: null
+      userId: null,
+      name: null,
+      email: null
     };
-  users.user_id = req.body.userID;
-  users.name = req.body.userName;
+  users.email = isValid(req.body.userEmail) ? req.body.userEmail.toLowerCase() : undefined;
+  users.userId = isValid(req.body.userID) ? req.body.userID.toLowerCase() : undefined;
+  users.name = isValid(req.body.userName) ? req.body.userName.toLowerCase() : undefined;
   global.MongoClient.connect(global.url, function (err, db) {
     if(err){
       console.warn(err.message);
     }
     else {
       var collection = db.collection('user_info');
-      if(!isValid(users.user_id)) {
+      if(!isValid(users.userId)) {
         collection.findOne({"$query": {}, "$orderby": {"_id": -1}}, function(err, user) {
-          var tempId = parseInt(user.user_id.toString().indexOf('_') == -1 ? 0 : user.user_id.split('_')[1]) + 1;
-          users.user_id = users.name + "_" + tempId;
+          var tempId = parseInt(user.userId.toString().indexOf('_') == -1 ? 0 : user.userId.split('_')[1]) + 1;
+          users.userId = users.name + "_" + tempId;
           collection.insert({
-            user_id: users.user_id,
-            user_name: users.name,
+            userId: users.userId,
+            email: users.email,
+            userName: users.name,
             password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
-            date: new Date().valueOf()
+            createdOn: new Date().valueOf()
           },
           function (err, o) {
             if (err) {
               console.warn(err.message);
             }
             else {
-              console.info("user inserted into db: " + users.user_id);
-              req.session.user = users.user_id;
-              newUser = users.name;
+              console.info("user inserted into db: " + users.userId);
+              req.session.user = users.userId;
+              global.newUser = users.name;
               res.redirect('/chat');
             }
           });
         });
       }
       else {
-        collection.findOne({"$query": {"user_id": users.user_id}}, function(err, user) {
+        global.newUser = null;
+        collection.findOne({ $or: [{userId: users.userId},{email: users.userId}] }, function(err, user) {
           global.errorMessage = 'User doesn\'t exists. Try again.';
           if(user) {
             if(bcrypt.compareSync(password, user.password)) {
               global.errorMessage = "";
-              users.name = user.user_name;
+              users.name = user.userName;
               console.info("user already exists in db: " + users.name);
-              req.session.user = user.user_id;
+              req.session.user = user.userId;
               res.redirect('/chat');
             }
             else {
@@ -144,7 +148,7 @@ ioSocket.on('connection', function (socket) {
     }
     else {
       if(socket.handshake.session.user) {
-        db.collection('user_info').findOne({"$query": {"user_id": socket.handshake.session.user}}, function(err, user) {
+        db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
           if(user) {
             var collection = db.collection('chat_msg'),
               cursor = collection.find(),
@@ -152,15 +156,18 @@ ioSocket.on('connection', function (socket) {
               //chat msg
               msg  = {
                 content: null,
-                user_id: null
+                userId: null
               };
             cursor.count({}, function(err, c) {
-              stream = cursor.skip(c-10).limit(10).stream();
+              stream = c < 10 ? cursor.stream() : cursor.skip(c-10).limit(10).stream();
               stream.on('data', function (chat) {
                 msg.content = chat.content;
-                msg.user_id = chat.user_id;
+                msg.userId = chat.userId;
                 socket.emit('event of chat on server', msg);
               });
+              if(c < 10) {
+                socket.emit('hide load chat');
+              }
               socket.emit('hide spinner');
             });
           }
@@ -191,18 +198,18 @@ ioSocket.on('connection', function (socket) {
       }
       else {
         if(socket.handshake.session.user) {
-          db.collection('user_info').findOne({"$query": {"user_id": socket.handshake.session.user}}, function(err, user) {
+          db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
             if(user) {
               var collection = db.collection('chat_msg'),
                 stream = collection.find().stream(),
                 //chat msg
                 chatMsg  = {
                   content: null,
-                  user_id: null
+                  userId: null
                 };
               stream.on('data', function (chat) {
                 chatMsg.content = chat.content;
-                chatMsg.user_id = chat.user_id;
+                chatMsg.userId = chat.userId;
                 socket.emit('event of chat on server', chatMsg);
               });
               socket.emit('hide spinner');
@@ -229,13 +236,13 @@ ioSocket.on('connection', function (socket) {
       }
       else {
         if(socket.handshake.session.user) {
-          db.collection('user_info').findOne({"$query": {"user_id": socket.handshake.session.user}}, function(err, user) {
+          db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
             if(user) {
               var collection = db.collection('chat_msg');
               collection.insert({
                 content: message.content,
-                user_id: socket.handshake.session.user,
-                date: new Date().valueOf()
+                userId: socket.handshake.session.user,
+                createdOn: new Date().valueOf()
                },
                function (err, o) {
                 if (err) {
