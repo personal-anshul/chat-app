@@ -8,7 +8,7 @@ $(document).ready(function(){
 
 //On chat submit
 $('#btn-send-message').on("click", function () {
-  window.scrollTo(0, document.body.scrollHeight + 200);
+  window.scrollTo(0, document.body.scrollHeight);
   var msg  = {
     content: null,
     user_id: null
