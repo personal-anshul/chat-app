@@ -3,6 +3,7 @@ var express = require('express'),
   routes = require('./routes'),
   chat = require('./routes/chat'),
   http = require('http'),
+  bcrypt = require('bcryptjs'),
   path = require('path'),
   cookieParser = require('cookie-parser'),
   methodOverride = require('method-override'),
@@ -91,7 +92,7 @@ app.post('/', function(req, res) {
           collection.insert({
             user_id: users.user_id,
             user_name: users.name,
-            password: password,
+            password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
             date: new Date().valueOf()
           },
           function (err, o) {
@@ -111,7 +112,7 @@ app.post('/', function(req, res) {
         collection.findOne({"$query": {"user_id": users.user_id}}, function(err, user) {
           global.errorMessage = 'User doesn\'t exists. Try again.';
           if(user) {
-            if(user.password == password) {
+            if(bcrypt.compareSync(password, user.password)) {
               global.errorMessage = "";
               users.name = user.user_name;
               console.info("user already exists in db: " + users.name);
