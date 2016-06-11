@@ -1,18 +1,55 @@
 <section class="col-xs-12 section-greeting">
-  <h3 class="col-md-10 col-sm-12 hidden-xs">Welcome to {{title}}</h3>
+  <h3 class="col-md-10 col-sm-12 hidden-xs">
+    <div class="col-xs-6">Welcome to {{title}}<sup>&reg;</sup></div>
+    <div class="load-chat col-xs-6"><a class="pull-right" href="javascript:void(0)"><small>load more..</small></a></div>
+    <div class="loaded-chat hide col-xs-6"><small class="pull-right">loaded all chat msgs..</small></div>
+  </h3>
 </section>
 <main class="col-xs-12 main">
   <section class="col-xs-12">
-    <article id="messages" class="col-md-8 col-sm-10 col-xs-12 message-panel"></article>
+    <div class="spinner"><div class="glyphicon glyphicon-refresh spinning"></div></div>
+    <article id="messages" class="col-xs-12 message-panel"></article>
   </section>
 </main>
 <footer class="col-xs-12 footer">
+  <aside class="col-xs-12 typing-user-panel">
+    <small id="typing-user"></small>
+  </aside>
   <section class="form-inline text-right">
-    <div class="form-group col-sm-push-3 col-xs-push-0 col-sm-7 col-xs-12">
-      <input id="input-message" type="text" class="input-message form-control col-xs-12" value="" placeholder="Write a message here..."/>
+    <div class="form-group col-sm-push-3 col-xs-push-1 col-sm-7 col-xs-7">
+      <input id="input-message" type="text" autofocus class="input-message form-control col-xs-12" value="" placeholder="Write a message here..."/>
     </div>
-    <div class="form-group col-sm-push-3 col-xs-push-6 col-sm-2 col-xs-6">
+    <div class="form-group col-sm-push-3 col-xs-push-1 col-sm-2 col-xs-4">
       <button type="button" name="button"  id="btn-send-message" class="btn btn-primary btn-send-message">Send</button>
     </div>
   </section>
 </footer>
+{{#if isNewUser}}
+<div class="col-xs-12">
+  <!-- Modal popup -->
+  <section id="userId-popup" class="modal modal-userId fade" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Please make a note</h4>
+        </div>
+        <div class="modal-body col-xs-12">
+          <p>Dear <strong>{{isNewUser}},</strong>
+          <p>Greeting from Windbag.</p><br>
+          <p>Here's your user id - <strong>{{loggedInUser}}</strong>. Please make a note as you can use it for future login(s).</p><br>
+          <small> - Windbag Support Team </small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary closePopup">Close</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{{/if}}
+<script>
+  $(document).ready(function(){
+    $('#userId-popup').modal('show');
+    $('.spinner').show();
+  });
+</script>

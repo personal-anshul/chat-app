@@ -1,4 +1,4 @@
-<section id="myModal" class="col-xs-12 login-panel" role="dialog">
+<section class="col-xs-12 login-panel" role="dialog">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -7,13 +7,13 @@
       </div>
       <div class="modal-body col-xs-12">
         <div class="col-xs-12 radio-panel">
-          <p style="color: red; font-size: 12px">{{errorMsg}}</p>
-          <div class="row col-xs-6">
+          <p class="error-msg">{{errorMsg}}</p>
+          <div class="pull-left radio-existing-user">
             <label class="radio-inline">
               <input type="radio" name="user" class="radio-user radio-existing-user" checked />Existing User
             </label>
           </div>
-          <div class="row col-xs-6">
+          <div class="pull-left">
             <label class="radio-inline">
               <input type="radio" name="user" class="radio-user radio-new-user"/>New User
             </label>
@@ -21,26 +21,27 @@
         </div>
         <form id="form-existing-user" action="" method="post">
           <div class="form-group col-xs-12">
-            <input id="user-id" name="userID" type="text" class="form-control" value="" placeholder="user id" required/>
+            <input id="user-id" name="userID" type="text" class="form-control" value="" placeholder="user id / email" maxLength="23" autofocus required/>
           </div>
           <div class="form-group col-xs-12">
-            <input id="user-password" name="userPassword" type="password" class="form-control" value="" placeholder="password" required/>
+            <input id="user-password" name="userPassword" type="password" class="form-control" value="" placeholder="password" maxLength="16" required/>
           </div>
           <div class="form-group col-xs-12 text-right">
             <input type="submit" class="btn btn-primary" value="Submit" />
-            <!-- <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
           </div>
         </form>
         <form id="form-new-user" class="hidden-element" action="" method="post">
           <div class="form-group col-xs-12">
-            <input id="user-name" name="userName" type="text" class="form-control" value="" placeholder="user name" required/>
+            <input id="user-name" name="userName" type="text" class="form-control" value="" placeholder="name" maxLength="16" required/>
           </div>
           <div class="form-group col-xs-12">
-            <input id="user-new-password" name="userNewPassword" type="password" class="form-control" value="" placeholder="new password" required/>
+            <input id="user-email" name="userEmail" type="email" class="form-control" value="" placeholder="email" maxLength="30" required/>
+          </div>
+          <div class="form-group col-xs-12">
+            <input id="user-new-password" name="userNewPassword" type="password" class="form-control" value="" placeholder="new password" maxLength="16" required/>
           </div>
           <div class="form-group col-xs-12 text-right">
             <input type="submit" class="btn btn-primary" value="Submit" />
-            <!-- <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
           </div>
         </form>
       </div>
