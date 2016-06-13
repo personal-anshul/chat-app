@@ -150,8 +150,14 @@ input {
 }
 .user-list-item {
   border-bottom: 1px solid #1d1d1d;
+  cursor: pointer;
+  padding: 5px;
+  &:hover {
+    color: #aaa;
+  }
 }
 .load-chat {
+  display: none;
   small {
     color: #3498db;
     font-weight: bold;
@@ -174,6 +180,7 @@ input {
 }
 #typing-user {
   display: inline-block;
+  margin-top: 5px;
   min-height: 10px;
 }
 .glyphicon.spinning {
@@ -184,6 +191,15 @@ input {
   margin-top: 300px;
   position: absolute;
   z-index: 5000;
+}
+.no-chat {
+  margin-top: 100px;
+}
+.user-online {
+  color: #2ecc71;
+}
+.user-offline {
+  color: #a9cce3;
 }
 @keyframes spin {
   from { transform: rotate(0deg); }
@@ -207,9 +223,6 @@ input {
   .radio-panel {
     padding-left: 15px;
     padding-right: 15px;
-  }
-  .section-greeting {
-    background: none;
   }
   .main {
     margin-top: 80px;

@@ -70,7 +70,7 @@ ioSocket.use(ioSession);
 app.get('/', routes.index);
 app.get('/logout', routes.logout);
 app.get('/chat', chat.chatMsg);
-app.post('/', function(req, res) {
+app.post('/', function (req, res) {
   var password = isValid(req.body.userPassword) ? req.body.userPassword : req.body.userNewPassword,
     //used info
     users = {
@@ -96,6 +96,7 @@ app.post('/', function(req, res) {
             email: users.email,
             userName: users.name,
             password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
+            isConnected: 1,
             createdOn: new Date().valueOf()
           },
           function (err, o) {
@@ -117,11 +118,28 @@ app.post('/', function(req, res) {
           global.errorMessage = 'User doesn\'t exists. Try again.';
           if(user) {
             if(bcrypt.compareSync(password, user.password)) {
-              global.errorMessage = "";
-              users.name = user.userName;
-              console.info("user already exists in db: " + users.name);
-              req.session.user = user.userId;
-              res.redirect('/chat');
+              if(user.isConnected == 1) {
+                global.errorMessage = 'Already connected in other browser. please disconnect that before.';
+                res.redirect('/');
+              }
+              else {
+                db.collection('user_info').update(
+                  { "userId": users.userId },
+                  { $set:
+                    {
+                      "isConnected": 1
+                    }
+                  },
+                  function(err, success) {
+                    console.log('isConnect updated.')
+                  }
+                );
+                global.errorMessage = "";
+                users.name = user.userName;
+                console.info("user already exists in db: " + users.name);
+                req.session.user = user.userId;
+                res.redirect('/chat');
+              }
             }
             else {
               console.info("Password doesn't matches with " + password);
@@ -150,39 +168,31 @@ ioSocket.on('connection', function (socket) {
       if(socket.handshake.session.user) {
         db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
           if(user) {
-            var collection = db.collection('chat_msg'),
-              cursor = collection.find(),
-              stream = null,
-              //chat msg
-              msg  = {
-                content: null,
-                userId: null
-              };
-            cursor.count({}, function(err, c) {
-              stream = c < 10 ? cursor.stream() : cursor.skip(c-10).limit(10).stream();
-              stream.on('data', function (chat) {
-                msg.content = chat.content;
-                msg.userId = chat.userId;
-                socket.emit('event of chat on server', msg);
-              });
-              if(c < 10) {
-                socket.emit('hide load chat');
+            socket.emit('remove users from list');
+            db.collection('user_info').update(
+              { "userId": socket.handshake.session.user },
+              { $set:
+                {
+                  "isConnected": 1
+                }
+              },
+              function(err, success) {
+                socket.broadcast.emit('remove users from list');
+                console.log('isConnect updated.');
+                var userStream = db.collection('user_info').find().stream();
+                userStream.on('data', function (user) {
+                  socket.emit('load all users', user);
+                  socket.broadcast.emit('update all users', user);
+                });
               }
-            });
-            var userStream = db.collection('user_info').find().stream();
-            userStream.on('data', function (user) {
-              socket.emit('load all users', user);
-            });
-            socket.emit('hide spinner');
+            );
           }
           else {
-            socket.emit('hide spinner');
             socket.handshake.session.user = null;
           }
         });
       }
       else {
-        socket.emit('hide spinner');
         // socket.emit('no user', socket.handshake.session.user);
       }
     }
@@ -190,13 +200,102 @@ ioSocket.on('connection', function (socket) {
 
   //event handler for socket disconnect
   socket.on('disconnect', function () {
+    global.errorMessage = "";
+    global.MongoClient.connect(global.url, function (err, db) {
+      if(err){
+        console.warn(err.message);
+      }
+      else {
+        db.collection('user_info').update(
+          { "userId": socket.handshake.session.user },
+          { $set:
+            {
+              "isConnected": 0
+            }
+          },
+          function(err, success) {
+            socket.broadcast.emit('remove users from list');
+            console.log('isConnect updated.');
+            var userStream = db.collection('user_info').find().stream();
+            userStream.on('data', function (user) {
+              socket.broadcast.emit('load all users', user);
+            });
+          }
+        );
+      }
+    });
     console.info((socket.handshake.session.user ? socket.handshake.session.user : 'anonymous_user') + ' disconnected..');
   });
 
   //event handler to broadcast info of user who is typing
   socket.on('get typing userinfo', function () {
-    var userInfoTyping = socket.handshake.session.user;
-    socket.broadcast.emit('update typing userinfo', userInfoTyping);
+    var userTyping = socket.handshake.session.user,
+      userTypingFor = socket.handshake.session.friend;
+    socket.broadcast.emit('update typing userinfo', userTyping, userTypingFor);
+  });
+
+  socket.on('remove typing userinfo', function () {
+    var userTypingFor = socket.handshake.session.friend;
+    socket.broadcast.emit('update typing userinfo', null, userTypingFor);
+  })
+
+  //event handler to load chat messages related to selected user
+  socket.on('load related chat', function (friendUserId) {
+    global.MongoClient.connect(global.url, function (err, db) {
+      if(err){
+        socket.emit('hide spinner');
+        console.warn(err.message);
+      }
+      else {
+        if(socket.handshake.session.user) {
+          socket.handshake.session.friend = friendUserId;
+          db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
+            if(user) {
+              var collection = db.collection('chat_msg'),
+                cursor = collection.find({
+                  $or : [
+                    {"toUser": friendUserId, "fromUser": socket.handshake.session.user},
+                    {"fromUser": friendUserId, "toUser": socket.handshake.session.user}
+                  ]
+                }),
+                stream = null,
+                //chat msg
+                msg  = {
+                  content: null,
+                  toUserId: null,
+                  fromUserId: null
+                };
+              cursor.count({}, function(err, c) {
+                if(c == 0) {
+                  socket.emit('no chat to load');
+                }
+                else {
+                  stream = c < 10 ? cursor.stream() : cursor.skip(c-10).limit(10).stream();
+                  stream.on('data', function (chat) {
+                    msg.content = chat.content;
+                    msg.toUserId = chat.toUser;
+                    msg.fromUserId = chat.fromUser;
+                    socket.emit('event of chat on server', msg);
+                  });
+                  if(c > 10) {
+                    socket.emit('show load chat');
+                  }
+                }
+              });
+              socket.emit('hide spinner');
+            }
+            else {
+              socket.emit('hide spinner');
+              socket.handshake.session.user = null;
+            }
+          });
+        }
+        else {
+          socket.emit('hide spinner');
+          // socket.emit('no user', socket.handshake.session.user);
+        }
+      }
+    });
   });
 
   //event handler to load all chat messages
@@ -215,11 +314,13 @@ ioSocket.on('connection', function (socket) {
                 //chat msg
                 chatMsg  = {
                   content: null,
-                  userId: null
+                  toUserId: null,
+                  fromUserId: null
                 };
               stream.on('data', function (chat) {
                 chatMsg.content = chat.content;
-                chatMsg.userId = chat.userId;
+                chatMsg.toUserId = chat.toUser;
+                chatMsg.fromUserId = chat.fromUser;
                 socket.emit('event of chat on server', chatMsg);
               });
               socket.emit('hide spinner');
@@ -245,13 +346,14 @@ ioSocket.on('connection', function (socket) {
         console.warn(err.message);
       }
       else {
-        if(socket.handshake.session.user) {
+        if(socket.handshake.session.user && socket.handshake.session.friend) {
           db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
             if(user) {
               var collection = db.collection('chat_msg');
               collection.insert({
                 content: message.content,
-                userId: socket.handshake.session.user,
+                fromUser: socket.handshake.session.user,
+                toUser: socket.handshake.session.friend,
                 createdOn: new Date().valueOf()
                },
                function (err, o) {
