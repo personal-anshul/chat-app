@@ -1,6 +1,6 @@
 <section class="col-xs-12 section-greeting">
   <h3 class="col-md-10 col-xs-12">
-    <div class="chat-with-user col-xs-6">Welcome to {{title}}<sup>&reg;</sup></div>
+    <div class="chat-with-user col-xs-6"><span class="hidden-xs">Welcome to </span>{{title}}<sup>&reg;</sup></div>
     <div class="load-chat col-xs-6"><a class="pull-right" href="javascript:void(0)"><small>load more..</small></a></div>
     <div class="loaded-chat hide col-xs-6"><small class="pull-right">loaded all chat msgs..</small></div>
   </h3>
@@ -21,10 +21,10 @@
   </aside>
   <section class="form-inline text-right">
     <div class="form-group col-sm-push-3 col-xs-push-1 col-sm-7 col-xs-7">
-      <input id="input-message" type="text" autofocus class="input-message form-control col-xs-12" value="" placeholder="write your message here..."/>
+      <input id="input-message" type="text" autofocus class="input-message form-control col-xs-12" value="" disabled="disabled" placeholder="write your message here..."/>
     </div>
     <div class="form-group col-sm-push-3 col-xs-push-1 col-sm-2 col-xs-4">
-      <button type="button" name="button"  id="btn-send-message" class="btn btn-primary btn-send-message">Send</button>
+      <button type="button" name="button"  id="btn-send-message" class="btn btn-primary btn-send-message" disabled="disabled">Send</button>
     </div>
   </section>
 </footer>

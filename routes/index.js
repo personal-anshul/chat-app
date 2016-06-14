@@ -26,6 +26,7 @@
    else {
      res.render('index', { title: 'Windbag', errorMsg: global.errorMessage });
    }
+   global.errorMessage = "";
  }
 
  /*
