@@ -43,13 +43,18 @@ $('.closePopup').on("click", function () {
 
 //Select user to start chat
 $('#nav-user-list').delegate('li', 'click', function(elm) {
-  $('#messages').html('');
-  $('#input-message').val('');
-  $('#btn-send-message, #input-message').removeAttr('disabled');
-  $('.spinner').show();
   var userInfo = $(this).attr('data-value').trim();
-  $('#user-list').removeClass('in');
-  socket.emit('load related chat', userInfo);
+  if($('.chat-with-user').html().split('<br>')[0] != $(this).html().split('(')[0].trim()) {
+    $('#messages').html('');
+    $('#input-message').val('');
+    $('#btn-send-message, #input-message').removeAttr('disabled');
+    $('.spinner').show();
+    $('#user-list').removeClass('in');
+    socket.emit('load related chat', userInfo);
+  }
+  else {
+    $('#user-list').removeClass('in');
+  }
 });
 
 //On chat submit
@@ -95,10 +100,11 @@ $('#input-message').on("focusout", function(event) {
 });
 
 //Load all chat msgs
-$('.load-chat').on("click", function () {
+$('.load-chat a').on("click", function () {
   $('.spinner').show();
   $('#messages').html('');
   $('.loaded-chat').addClass('show');
+  $('.load-chat').removeClass('show');
   $('.load-chat').addClass('hide');
   socket.emit('event of load more chats');
 });
@@ -112,10 +118,10 @@ socket.on('remove users from list', function() {
 socket.on('load all users', function (user) {
   if(user.userId != $('#loggedIn-user').html()) {
     if(user.isConnected == 1) {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'">' + user.userId + ' (' + user.email + ') - <span class="user-online">Online</span></li>');
+      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-online">Online</span></li>');
     }
     else {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'">' + user.userId + ' (' + user.email + ') - <span class="user-offline">Offline</span></li>');
+      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-offline">Offline</span></li>');
     }
   }
 });
@@ -128,6 +134,7 @@ socket.on('no user to load', function () {
 //socket handler to load user details with whom loggined user wanted to chat
 socket.on('load user details for chat', function (userDetail, currentUser) {
   if($('#loggedIn-user').html() == currentUser) {
+    $('.display-picture').css({"display": "inline-block"});
     $('.chat-with-user').html(userDetail);
   }
 });
@@ -137,6 +144,9 @@ socket.on('is user typing?', function () {
   if($('#input-message').val() != "") {
     socket.emit('get typing userinfo');
   }
+  else {
+    socket.emit('remove typing userinfo');
+  }
 });
 
 //socket handler if there is no chat msg between selected users
@@ -144,9 +154,17 @@ socket.on('no chat to load', function() {
   $('#messages').html('<h1 class="text-center no-chat">Oops.. There is no chat between you both yet.</h1>');
 });
 
-//socket handler to hide spinner
+//socket handler to show load more chat link
 socket.on('show load all chat link', function (data) {
-  $('.load-chat').show();
+  $('.load-chat').removeClass("hide");
+  $('.load-chat').addClass("show");
+});
+
+//socket handler to hide load more chat link
+socket.on('hide load all chat link', function (data) {
+  $('.load-chat').removeClass("show");
+  $('.load-chat').addClass("hide");
+  $('.loaded-chat').removeClass("show");
 });
 
 //socket handler to hide spinner
@@ -160,7 +178,7 @@ socket.on('hide spinner', function (data) {
 socket.on('update typing userinfo', function (userTyping, typingFor) {
   if(userTyping != null) {
     if($('#loggedIn-user').html() == typingFor && $('.chat-with-user').html().split('<br>')[0] == userTyping) {
-      $('#typing-user').html(userTyping + ' is typing...');
+      $('#typing-user').html("<span class='user-typing'>" + userTyping + ' is typing...</span>');
     }
     else {
       $('#typing-user').html('');
@@ -177,10 +195,10 @@ socket.on('update typing userinfo', function (userTyping, typingFor) {
 socket.on('update all users', function (user) {
   if(user.userId != $('#loggedIn-user').html()) {
     if(user.isConnected == 1) {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'">' + user.userId + ' (' + user.email + ') - <span class="user-online">Online</span></li>');
+      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-online">Online</span></li>');
     }
     else {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'">' + user.userId + ' (' + user.email + ') - <span class="user-offline">Offline</span></li>');
+      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-offline">Offline</span></li>');
     }
   }
   if(user.userId == $('.chat-with-user').html().split('<br>')[0]) {
@@ -198,11 +216,16 @@ socket.on('update all users', function (user) {
 socket.on('event of chat on server', function (data) {
   if(($('#loggedIn-user').html() == data.toUserId.trim() || $('#loggedIn-user').html() == data.fromUserId.trim())
     && ($('.chat-with-user').html().split('<br>')[0] == data.toUserId.trim() || $('.chat-with-user').html().split('<br>')[0] == data.fromUserId.trim())) {
-    if($('#loggedIn-user').html() == data.fromUserId.trim()) {
-      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUserId + ": </b>" + data.content + "</div>"));
+    if($('#messages').html().indexOf('Oops.. There is no chat between you both yet.') != -1) {
+      $('#messages').html('');
     }
-    else {
-      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.fromUserId + ": </b>" + data.content + "</div>"));
+    if($('#messages').html().indexOf('Select user from top right hamgurber menu to start chat with them.') == -1) {
+      if($('#loggedIn-user').html() == data.fromUserId.trim()) {
+        $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUserId + ": </b>" + data.content + "</div>"));
+      }
+      else {
+        $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.fromUserId + ": </b>" + data.content + "</div>"));
+      }
     }
   }
   console.log('in')
