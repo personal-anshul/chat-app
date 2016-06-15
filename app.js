@@ -70,6 +70,8 @@ ioSocket.use(ioSession);
 app.get('/', routes.index);
 app.get('/logout', routes.logout);
 app.get('/chat', chat.chatMsg);
+
+//post request for registration and login
 app.post('/', function (req, res) {
   var password = isValid(req.body.userPassword) ? req.body.userPassword : req.body.userNewPassword,
     //used info
@@ -92,12 +94,14 @@ app.post('/', function (req, res) {
           var tempId = parseInt(user.userId.toString().indexOf('_') == -1 ? 0 : user.userId.split('_')[1]) + 1;
           users.userId = users.name + "_" + tempId;
           collection.insert({
+            _id: (new Date().valueOf() * 2) + "",
             userId: users.userId,
             email: users.email,
             userName: users.name,
             password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
             isConnected: 1,
-            createdOn: new Date().valueOf()
+            lastConnected: new Date().setMinutes(new Date().getMinutes() + 330).valueOf(),
+            createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
           },
           function (err, o) {
             if (err) {
@@ -107,6 +111,7 @@ app.post('/', function (req, res) {
               console.info("user inserted into db: " + users.userId);
               req.session.user = users.userId;
               global.newUser = users.name;
+              req.session.newUser = users.name;
               res.redirect('/chat');
             }
           });
@@ -127,17 +132,19 @@ app.post('/', function (req, res) {
                   { "userId": users.userId },
                   { $set:
                     {
-                      "isConnected": 1
+                      "isConnected": 1,
+                      lastConnected: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
                     }
                   },
                   function(err, success) {
-                    console.log('isConnect updated.')
+                    console.info('isConnect updated.')
                   }
                 );
                 global.errorMessage = "";
                 users.name = user.userName;
                 console.info("user already exists in db: " + users.name);
                 req.session.user = user.userId;
+                req.session.newUser = users.name;
                 res.redirect('/chat');
               }
             }
@@ -158,7 +165,9 @@ app.post('/', function (req, res) {
 
 //io connection event handler
 ioSocket.on('connection', function (socket) {
+  //show who is connected
   console.info((socket.handshake.session.user ? socket.handshake.session.user : 'anonymous_user') + ' connected..');
+
   //event handler to load chat on connection
   global.MongoClient.connect(global.url, function (err, db) {
     if(err){
@@ -173,16 +182,24 @@ ioSocket.on('connection', function (socket) {
               { "userId": socket.handshake.session.user },
               { $set:
                 {
-                  "isConnected": 1
+                  "isConnected": 1,
+                  lastConnected: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
                 }
               },
               function(err, success) {
                 socket.broadcast.emit('remove users from list');
-                console.log('isConnect updated.');
-                var userStream = db.collection('user_info').find().stream();
-                userStream.on('data', function (user) {
-                  socket.emit('load all users', user);
-                  socket.broadcast.emit('update all users', user);
+                console.info('isConnect updated.');
+                var userStream = db.collection('user_info').find();
+                userStream.count({}, function (err, c) {
+                  if(c == 1) {
+                    socket.emit('no user to load');
+                  }
+                  else {
+                    userStream.stream().on('data', function (user) {
+                      socket.emit('load all users', user);
+                      socket.broadcast.emit('update all users', user);
+                    });
+                  }
                 });
               }
             );
@@ -210,15 +227,16 @@ ioSocket.on('connection', function (socket) {
           { "userId": socket.handshake.session.user },
           { $set:
             {
-              "isConnected": 0
+              "isConnected": 0,
+              lastConnected: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
             }
           },
           function(err, success) {
             socket.broadcast.emit('remove users from list');
-            console.log('isConnect updated.');
+            console.info('isConnect updated.');
             var userStream = db.collection('user_info').find().stream();
             userStream.on('data', function (user) {
-              socket.broadcast.emit('load all users', user);
+              socket.broadcast.emit('update all users', user);
             });
           }
         );
@@ -234,6 +252,7 @@ ioSocket.on('connection', function (socket) {
     socket.broadcast.emit('update typing userinfo', userTyping, userTypingFor);
   });
 
+  // remove typing userinfo once he/she moves out of textbox
   socket.on('remove typing userinfo', function () {
     var userTypingFor = socket.handshake.session.friend;
     socket.broadcast.emit('update typing userinfo', null, userTypingFor);
@@ -248,14 +267,19 @@ ioSocket.on('connection', function (socket) {
       }
       else {
         if(socket.handshake.session.user) {
-          socket.handshake.session.friend = friendUserId;
-          db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
+          db.collection('user_info').findOne({"$query": {"_id": friendUserId}}, function(err, user) {
             if(user) {
+              socket.handshake.session.friend = user.userId;
+              var lastSeen = new Date(user.lastConnected).toJSON().split('T');
+              var localDate = new Date().setMinutes(new Date().getMinutes() + 330);
+              var userData = user.userId + ((user.isConnected == 1) ? "<br><small class='user-last-seen'>Online</small>" : ("<br><small class='user-last-seen'>last seen at " + (lastSeen[0] == new Date(localDate).toJSON().split('T')[0] ? "today" : lastSeen[0]) + " " + lastSeen[1].slice(0,5) + "</small>"));
+              socket.emit('load user details for chat', userData, socket.handshake.session.user);
+              socket.broadcast.emit('is user typing?');
               var collection = db.collection('chat_msg'),
                 cursor = collection.find({
                   $or : [
-                    {"toUser": friendUserId, "fromUser": socket.handshake.session.user},
-                    {"fromUser": friendUserId, "toUser": socket.handshake.session.user}
+                    {"toUser": socket.handshake.session.friend, "fromUser": socket.handshake.session.user},
+                    {"fromUser": socket.handshake.session.friend, "toUser": socket.handshake.session.user}
                   ]
                 }),
                 stream = null,
@@ -278,7 +302,7 @@ ioSocket.on('connection', function (socket) {
                     socket.emit('event of chat on server', msg);
                   });
                   if(c > 10) {
-                    socket.emit('show load chat');
+                    socket.emit('show load all chat link');
                   }
                 }
               });
@@ -354,7 +378,7 @@ ioSocket.on('connection', function (socket) {
                 content: message.content,
                 fromUser: socket.handshake.session.user,
                 toUser: socket.handshake.session.friend,
-                createdOn: new Date().valueOf()
+                createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
                },
                function (err, o) {
                 if (err) {

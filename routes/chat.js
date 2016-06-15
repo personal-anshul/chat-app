@@ -13,7 +13,9 @@ exports.chatMsg = function(req, res) {
         var collection = db.collection('user_info');
         collection.findOne({"$query": {"userId": user}}, function(err, isUser) {
           if(isUser) {
-            res.render('chat', { title: 'Windbag', loggedInUser: user, isNewUser: global.newUser, typingUser: global.userInfoTyping });
+            var isNewUser = global.newUser;
+            global.newUser = null;
+            res.render('chat', { title: 'Windbag', loggedInUser: user, userName: req.session.newUser, isNewUser: isNewUser, typingUser: global.userInfoTyping });
           }
           else {
             global.errorMessage = "User has been removed by Admin.";

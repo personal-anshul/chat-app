@@ -28,7 +28,7 @@ input {
 .main {
   margin: 150px auto 20px;
   .message-panel {
-    margin: 0 0 80px;
+    margin: 10px 0 80px;
     .para-message {
       background: #d0daf9;
       border: 1px solid #23527c;
@@ -88,8 +88,11 @@ input {
   }
   .userId-detail {
     display: inline-block;
-    margin-top: 14px;
+    margin-top: 12px;
     margin-right: 10px;
+    small {
+      color: #fff;
+    }
   }
 }
 .navbar-brand {
@@ -124,11 +127,11 @@ input {
   width: 100%;
 }
 .modal-userId-close {
-  height: 85px;
+  height: 35px;
   left: 85%;
   opacity: 0 !important;
   top: -5%;
-  width: 85px;
+  width: 35px;
   animation: spin 0.5s infinite linear;
   transition: all 1s linear;
 }
@@ -201,6 +204,10 @@ input {
 .user-offline {
   color: #a9cce3;
 }
+.user-last-seen {
+  display: inline-block;
+  width: 210%;
+}
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -223,9 +230,6 @@ input {
   .radio-panel {
     padding-left: 15px;
     padding-right: 15px;
-  }
-  .main {
-    margin-top: 80px;
   }
   .footer {
     padding: 0 10px 0;
