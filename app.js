@@ -106,6 +106,10 @@ app.post('/', function (req, res) {
           function (err, o) {
             if (err) {
               console.warn(err.message);
+              if (err.code === 11000) {
+                global.errorMessage = 'Email already exists, please login with the same.';
+                res.redirect('/');
+              }
             }
             else {
               console.info("user inserted into db: " + users.userId);
@@ -292,6 +296,7 @@ ioSocket.on('connection', function (socket) {
               cursor.count({}, function(err, c) {
                 if(c == 0) {
                   socket.emit('no chat to load');
+                  socket.emit('hide load all chat link');
                 }
                 else {
                   stream = c < 10 ? cursor.stream() : cursor.skip(c-10).limit(10).stream();
@@ -303,6 +308,9 @@ ioSocket.on('connection', function (socket) {
                   });
                   if(c > 10) {
                     socket.emit('show load all chat link');
+                  }
+                  else {
+                    socket.emit('hide load all chat link');
                   }
                 }
               });

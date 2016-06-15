@@ -28,7 +28,7 @@ input {
 .main {
   margin: 150px auto 20px;
   .message-panel {
-    margin: 10px 0 80px;
+    margin: 20px 0 80px;
     .para-message {
       background: #d0daf9;
       border: 1px solid #23527c;
@@ -90,9 +90,6 @@ input {
     display: inline-block;
     margin-top: 12px;
     margin-right: 10px;
-    small {
-      color: #fff;
-    }
   }
 }
 .navbar-brand {
@@ -149,7 +146,7 @@ input {
   padding: 7px 10px;
 }
 .loaded-chat {
-  margin-top: 5px;
+  margin-top: 23px;
 }
 .user-list-item {
   border-bottom: 1px solid #1d1d1d;
@@ -160,7 +157,7 @@ input {
   }
 }
 .load-chat {
-  display: none;
+  margin-top: 18px;
   small {
     color: #3498db;
     font-weight: bold;
@@ -196,7 +193,12 @@ input {
   z-index: 5000;
 }
 .no-chat {
-  margin-top: 100px;
+  background: rgba(234, 201, 244, 0.5);
+  border: 1px solid #8d00b7;
+  border-radius: 5px;
+  box-shadow: 2px 1px 5px #A55CBB;
+  color: #5D4764;
+  padding: 20px;
 }
 .user-online {
   color: #2ecc71;
@@ -204,10 +206,24 @@ input {
 .user-offline {
   color: #a9cce3;
 }
+.user-typing {
+  color: #8d00b7;
+}
 .user-last-seen {
   display: inline-block;
   width: 210%;
 }
+.display-picture {
+  border: 1px solid #a9cce3;
+  border-radius: 20px;
+  display: none;
+  height: 40px;
+  width: 40px;
+}
+.chat-with-user {
+  vertical-align: text-bottom;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -231,8 +247,17 @@ input {
     padding-left: 15px;
     padding-right: 15px;
   }
+  .main .message-panel {
+    margin-bottom: 110px;
+  }
   .footer {
     padding: 0 10px 0;
+  }
+  .loaded-chat{
+    margin-top: -19px;
+  }
+  .load-chat {
+    margin-top: -26px;
   }
 }
 
