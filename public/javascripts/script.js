@@ -118,10 +118,10 @@ socket.on('remove users from list', function() {
 socket.on('load all users', function (user) {
   if(user.userId != $('#loggedIn-user').html()) {
     if(user.isConnected == 1) {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'">' + user.userId + ' (' + user.email + ') - <span class="user-online">Online</span></li>');
+      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-online">Online</span></li>');
     }
     else {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'">' + user.userId + ' (' + user.email + ') - <span class="user-offline">Offline</span></li>');
+      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-offline">Offline</span></li>');
     }
   }
 });
@@ -195,10 +195,10 @@ socket.on('update typing userinfo', function (userTyping, typingFor) {
 socket.on('update all users', function (user) {
   if(user.userId != $('#loggedIn-user').html()) {
     if(user.isConnected == 1) {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'">' + user.userId + ' (' + user.email + ') - <span class="user-online">Online</span></li>');
+      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-online">Online</span></li>');
     }
     else {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'">' + user.userId + ' (' + user.email + ') - <span class="user-offline">Offline</span></li>');
+      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-offline">Offline</span></li>');
     }
   }
   if(user.userId == $('.chat-with-user').html().split('<br>')[0]) {
