@@ -8,6 +8,7 @@ var express = require('express'),
   cookieParser = require('cookie-parser'),
   methodOverride = require('method-override'),
   bodyParser = require('body-parser'),
+  fs = require('fs'), // required for file serving
   //express initialization
   app = express();
 
@@ -315,6 +316,11 @@ ioSocket.on('connection', function (socket) {
                 }
               });
               socket.emit('hide spinner');
+
+              fs.readFile('public/images/no-user.png', function(err, buf){
+                socket.emit('image', { image: true, buffer: buf.toString('base64') });
+              });
+
             }
             else {
               socket.emit('hide spinner');

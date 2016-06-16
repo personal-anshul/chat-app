@@ -3,8 +3,30 @@ body {
   font: 16px "Indie Flower", Helvetica, Arial, sans-serif;
   transition: all 1s linear;
 }
+canvas {
+  background: transparent;
+  border-radius: 4px;
+  margin-left: 15px;
+}
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small {
+  color: inherit;
+  font-weight: bold;
+}
 input {
   text-transform: lowercase;
+  &:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px white inset;
+    transition: all 0.1s linear;
+  }
+  &:focus:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px white inset;
+    transition: all 0.1s linear;
+  }
 }
 .header {
   color: #fff;
@@ -57,9 +79,20 @@ input {
   color: red;
   font-size: 12px;
 }
+.login {
+  height: 35px;
+  overflow: hidden;
+  opacity: 0;
+  width: 35px;
+}
 .login-panel {
-  margin-top: 120px;
+  animation: spin 0.8s ease-in-out;
+  height: 100%;
+  margin-top: 105px;
   opacity: 0.85;
+  overflow: visible;
+  width: 100%;
+  transition: all 1s linear;
 }
 .radio-existing-user {
   margin-right: 20px;
@@ -116,6 +149,56 @@ input {
 }
 .navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {
   background-color: #333 !important;
+}
+.no-margin {
+  margin: 0;
+}
+.form-control {
+  border-radius: 0;
+  border: 1px solid #598383;
+  height: 40px;
+  &:focus {
+    background: #C2D8D8;
+    box-shadow: none;
+  }
+}
+.btn-submit {
+  bottom: -80px;
+  position: absolute;
+  right: 16px;
+  z-index: 10;
+}
+.btn-login {
+  bottom: -65px;
+  position: absolute;
+  right: 16px;
+  z-index: 10;
+}
+.btn-primary {
+  background: #598383;
+  border-color: #598383;
+  &:hover,
+  &:focus {
+    background: #71B4B4;
+    border-color: #71B4B4;
+  }
+}
+.modal-header {
+  background: #598383;
+  color: #000;
+  padding: 15px;
+}
+.modal-title {
+  font-weight: bold;
+}
+.modal-content {
+  border: 1px solid #6495ed;
+  border-radius: 0;
+  padding: 0;
+}
+.modal-footer {
+  height: 62px;
+  padding: 10px 15px;
 }
 .modal-userId {
   height: 500px;
@@ -230,10 +313,36 @@ input {
 .chat-with-user {
   vertical-align: text-bottom;
 }
+.radio-inline, .checkbox-inline {
+  font-weight: bold;
+}
 
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+@keyframes bounce {
+  50% {
+    transform:translate(3%);
+  }
+  60% {
+    transform:translate(0%);
+  }
+  70% {
+    transform:translate(-5%);
+  }
+  80% {
+    transform:translate(0%);
+  }
+  90% {
+    transform:translate(7%);
+  }
+  95% {
+    transform:translate(3%);
+  }
+  100% {
+    transform:translate(0);
+  }
 }
 
 @-moz-document url-prefix() {
@@ -245,6 +354,9 @@ input {
 @media screen and (max-width: 767px) {
   body {
     background-repeat: repeat;
+  }
+  canvas {
+    margin-left: 0;
   }
   *[class^='col-'] {
     padding-left: 5px;

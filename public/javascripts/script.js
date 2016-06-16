@@ -9,18 +9,23 @@ $(document).ready(function(){
 //show/hode login/signup sections as radio button selected
 $('.radio-user').on("change", function () {
   $('.error-msg').html('');
+  $('#login-panel').removeClass('login-panel').addClass('login');
   if($('.radio-new-user').is(":checked")) {
     document.getElementById("form-new-user").reset();
     $('#form-new-user').show();
     $('#form-existing-user').hide();
+    $('.modal-title').html('Sign Up <small>( Please provide your details )</small>');
+    $('#login-panel').removeClass('login').addClass('login-panel');
     setTimeout(function() {
       $('#user-name').focus();
     }, 200);
   }
   else if($('.radio-existing-user').is(":checked")) {
     document.getElementById("form-existing-user").reset();
-    $('#form-existing-user').show();
     $('#form-new-user').hide();
+    $('#form-existing-user').show();
+    $('.modal-title').html('Login <small>( Please provide your identity )</small>');
+    $('#login-panel').removeClass('login').addClass('login-panel');
     setTimeout(function() {
       $('#user-id').focus();
     }, 200);
@@ -228,6 +233,5 @@ socket.on('event of chat on server', function (data) {
       }
     }
   }
-  console.log('in')
   window.scrollTo(0, document.body.scrollHeight);
 });

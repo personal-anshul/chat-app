@@ -1,9 +1,11 @@
-<section class="col-xs-12 login-panel" role="dialog">
+<section id="login-panel" class="col-xs-12 login" role="dialog">
   <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
+    <div class="modal-content col-xs-12">
+      <div class="modal-header col-xs-12">
         <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
-        <h4 class="modal-title">Please provide your identity</h4>
+        <h3 class="modal-title">
+          Login <small>( Please provide your identity )</small>
+        </h3>
       </div>
       <div class="modal-body col-xs-12">
         <div class="col-xs-12 radio-panel">
@@ -26,8 +28,8 @@
           <div class="form-group col-xs-12">
             <input id="user-password" name="userPassword" type="password" class="form-control" value="" placeholder="password" maxLength="16" required/>
           </div>
-          <div class="form-group col-xs-12 text-right">
-            <input type="submit" class="btn btn-primary" value="Submit" />
+          <div class="form-group no-margin col-xs-12 text-right">
+            <input type="submit" class="btn btn-primary btn-login" value="login" />
           </div>
         </form>
         <form id="form-new-user" class="hidden-element" action="" method="post">
@@ -37,16 +39,22 @@
           <div class="form-group col-xs-12">
             <input id="user-email" name="userEmail" type="email" class="form-control" value="" placeholder="email" maxLength="30" required/>
           </div>
-          <div class="form-group col-xs-12">
+          <div class="form-group no-margin col-xs-12">
             <input id="user-new-password" name="userNewPassword" type="password" class="form-control" value="" placeholder="new password" maxLength="16" required/>
           </div>
           <div class="form-group col-xs-12 text-right">
-            <input type="submit" class="btn btn-primary" value="Submit" />
+            <input type="submit" class="btn btn-primary btn-submit" value="Submit" />
           </div>
         </form>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer col-xs-12">
       </div>
     </div>
   </div>
 </section>
+<script>
+  $(document).ready(function() {
+    $('#login-panel').removeClass('login').addClass('login-panel');
+    $('body').css({"overflow": "hidden"});
+  });
+</script>
