@@ -26,13 +26,57 @@
   </aside>
   <section class="form-inline text-right">
     <div class="form-group col-sm-push-3 col-xs-push-0 col-sm-7 col-xs-12">
-      <input id="input-message" type="text" autofocus class="input-message form-control col-xs-12" value="" disabled="disabled" placeholder="write your message here..."/>
+      <textarea
+        id="input-message"
+        class="input-message form-control col-xs-12"
+        rows="3" cols="30"
+        disabled="disabled"
+        placeholder="write your message here...">
+      </textarea>
     </div>
-    <div class="form-group col-sm-push-3 col-xs-push-6 col-sm-2 col-xs-6">
-      <button type="button" name="button"  id="btn-send-message" class="btn btn-primary btn-send-message" disabled="disabled">Send</button>
+    <div class="form-group no-padding col-sm-push-3 col-xs-push-6 col-sm-2 col-xs-6">
+      <button type="button" name="button"  id="btn-send-message" class="btn btn-send-message" disabled="disabled">
+        <img class="img-send-msg" width="30px" src="/images/btn-send-msg.svg" alt="" />
+      </button>
+      <button
+        type="button" name="button"  id="btn-send-message"
+        class="btn btn-send-message" disabled="disabled"
+        data-toggle="modal" data-target="#attach-file-popup">
+        <img class="img-send-msg" width="30px" src="/images/btn-attachment.svg" alt="" />
+      </button>
     </div>
   </section>
 </footer>
+
+<div class="col-xs-12">
+  <!-- Modal popup -->
+  <section id="attach-file-popup" class="modal fade attach-file-popup" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content col-xs-12">
+       <form id="uploadForm"
+         enctype="multipart/form-data"
+         action="/api/photo?id=22"
+         method="post">
+          <div class="modal-header col-xs-12">
+            <h4 class="modal-title">Browser the file to attach</h4>
+          </div>
+          <div class="modal-body col-xs-12">
+            <input type="file" name="dataFile" id="textbox-attach-file"/>
+            <br>
+            <img id="img-uploaded" src="" width="200" style="display:none;" />
+            <br>
+            <div id="disp_tmp_path"></div>
+          </div>
+          <div class="modal-footer col-xs-12">
+            <input id="submit-upload-popup" class="btn btn-primary" type="submit" value="Upload" name="submit">
+            <button id="close-upload-popup" type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
+
 {{#if isNewUser}}
 <div class="col-xs-12">
   <!-- Modal popup -->

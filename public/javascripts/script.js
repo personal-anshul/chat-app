@@ -90,7 +90,10 @@ $('#btn-send-message').on("click", function () {
 //bind enter key event with input msg field
 $('#input-message').on("keypress", function(event) {
   if(event.keyCode === 13) {
-    $('#btn-send-message').click();
+    if(!event.shiftKey) {
+      event.preventDefault();
+      $('#btn-send-message').click();
+    }
   }
   else {
     socket.emit('get typing userinfo');
@@ -112,6 +115,37 @@ $('.load-chat a').on("click", function () {
   $('.load-chat').removeClass('show');
   $('.load-chat').addClass('hide');
   socket.emit('event of load more chats');
+});
+
+//read the file attached
+$('#textbox-attach-file').on("change", function(event) {
+  // var inputFile = $('#textbox-attach-file');
+  // console.log(inputFile)
+  // if ('files' in inputFile) {
+  //   for (var i = 0; i < inputFile.files.length; i++) {
+  //     console.log(inputFile.files[i]);
+  //   }
+  // }
+  var tmppath = URL.createObjectURL(event.target.files[0]);
+  if(event.target.files[0].type.indexOf('image/') == 0) {
+    $("#img-uploaded").fadeIn("fast").attr('src', URL.createObjectURL(event.target.files[0]));
+    $("#disp_tmp_path").html("<br>Updated as : <strong>" + tmppath + "</strong>");
+  }
+  else {
+    $("#disp_tmp_path").html("<em>No preview available.</em>");
+  }
+  // socket.emit('read file', tmppath);
+});
+
+$('#submit-upload-popup').on("click", function () {
+});
+
+$('#close-upload-popup').on("click", function () {
+  setTimeout(function() {
+    $("#img-uploaded").fadeOut("fast").attr('src', "");
+    document.getElementById('textbox-attach-file').value = "";
+    $("#disp_tmp_path").html("");
+  }, 200);
 });
 
 //Make list empty before reload user list
@@ -163,6 +197,7 @@ socket.on('no chat to load', function() {
 socket.on('show load all chat link', function (data) {
   $('.load-chat').removeClass("hide");
   $('.load-chat').addClass("show");
+  $('#input-message').focus();
 });
 
 //socket handler to hide load more chat link
@@ -170,6 +205,7 @@ socket.on('hide load all chat link', function (data) {
   $('.load-chat').removeClass("show");
   $('.load-chat').addClass("hide");
   $('.loaded-chat').removeClass("show");
+  $('#input-message').focus();
 });
 
 //socket handler to hide spinner
@@ -212,7 +248,7 @@ socket.on('update all users', function (user) {
       $('.user-last-seen').html('Online');
     }
     else {
-      $('.user-last-seen').html("last seen at " + (lastSeen[0] == new Date().toJSON().split('T')[0] ? "today" : lastSeen[0]) + " " + lastSeen[1].slice(0,5));
+      $('.user-last-seen').html("last seen at " + (lastSeen[0] == new Date(new Date().setMinutes(new Date().getMinutes() + 330)).toJSON().split('T')[0] ? "today" : lastSeen[0]) + " " + lastSeen[1].slice(0,5));
     }
   }
 });
@@ -234,4 +270,15 @@ socket.on('event of chat on server', function (data) {
     }
   }
   window.scrollTo(0, document.body.scrollHeight);
+});
+
+//socket handler to display file received
+socket.on("file received", function(info) {
+  // $('#messages').append("<canvas id='canvasPanel'></canvas>");
+  // var ctx = document.getElementById('canvasPanel').getContext('2d');
+  // if (info.image) {
+  //   var img = new Image();
+  //   img.src = 'data:image/jpeg;base64,' + info.buffer;
+  //   ctx.drawImage(img, 0, 0);
+  // }
 });

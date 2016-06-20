@@ -17,8 +17,11 @@
     "method-override": "^2.3.6",
     "mongodb": "^1.4.19",
     "morgan": "~1.6.1",
+    "multer": "^1.1.0",
     "serve-favicon": "^2.3.0",
     "session-file-store": "^0.2.0",
-    "socket.io": "^1.0.6"
+    "should": "~7.1.0",
+    "socket.io": "^1.0.6",
+    "supertest": "~1.1.0"
   }
 }

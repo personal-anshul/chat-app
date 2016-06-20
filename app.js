@@ -8,9 +8,19 @@ var express = require('express'),
   cookieParser = require('cookie-parser'),
   methodOverride = require('method-override'),
   bodyParser = require('body-parser'),
+  multer  =   require('multer'),
   fs = require('fs'), // required for file serving
   //express initialization
-  app = express();
+  app = express(),
+  storage = multer.diskStorage({
+    destination: function (req, file, callback) {
+      callback(null, './uploads');
+    },
+    filename: function (req, file, callback) {
+      callback(null, file.fieldname + '-' + Date.now());
+    }
+  }),
+  upload = multer({ storage : storage}).single('dataFile');
 
 /*Global variable*/
 global.errorMessage = null;
@@ -71,6 +81,20 @@ ioSocket.use(ioSession);
 app.get('/', routes.index);
 app.get('/logout', routes.logout);
 app.get('/chat', chat.chatMsg);
+
+// app.post('/chat', function () {
+//   console.log("query - " + req.query.id);
+// });
+
+//post request to upload data
+app.post('/api/photo', function(req,res){
+  upload(req,res,function(err) {
+    if(err) {
+      return res.end("Error uploading file.");
+    }
+    res.redirect("/chat");
+  });
+});
 
 //post request for registration and login
 app.post('/', function (req, res) {
@@ -142,12 +166,10 @@ app.post('/', function (req, res) {
                     }
                   },
                   function(err, success) {
-                    console.info('isConnect updated.')
                   }
                 );
                 global.errorMessage = "";
                 users.name = user.userName;
-                console.info("user already exists in db: " + users.name);
                 req.session.user = user.userId;
                 req.session.newUser = users.name;
                 res.redirect('/chat');
@@ -193,7 +215,6 @@ ioSocket.on('connection', function (socket) {
               },
               function(err, success) {
                 socket.broadcast.emit('remove users from list');
-                console.info('isConnect updated.');
                 var userStream = db.collection('user_info').find();
                 userStream.count({}, function (err, c) {
                   if(c == 1) {
@@ -238,7 +259,6 @@ ioSocket.on('connection', function (socket) {
           },
           function(err, success) {
             socket.broadcast.emit('remove users from list');
-            console.info('isConnect updated.');
             var userStream = db.collection('user_info').find().stream();
             userStream.on('data', function (user) {
               socket.broadcast.emit('update all users', user);
@@ -316,11 +336,6 @@ ioSocket.on('connection', function (socket) {
                 }
               });
               socket.emit('hide spinner');
-
-              fs.readFile('public/images/no-user.png', function(err, buf){
-                socket.emit('image', { image: true, buffer: buf.toString('base64') });
-              });
-
             }
             else {
               socket.emit('hide spinner');
@@ -410,6 +425,14 @@ ioSocket.on('connection', function (socket) {
           });
         }
       }
+    });
+  });
+
+  //read file  attached on client
+  socket.on('read file', function (file) {
+    fs.readFile(file, function(err, buf){
+      socket.broadcast.emit('file received', { image: true, buffer: buf.toString('base64') });
+      console.log('got image');
     });
   });
 });

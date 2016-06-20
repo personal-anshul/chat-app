@@ -4,6 +4,7 @@ bin/
 log/
 temp/
 tmp/
+uploads/
 node_modules/
 public/library/
 *.css
