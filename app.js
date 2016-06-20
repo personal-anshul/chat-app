@@ -312,7 +312,8 @@ ioSocket.on('connection', function (socket) {
                 msg  = {
                   content: null,
                   toUserId: null,
-                  fromUserId: null
+                  fromUserId: null,
+                  createdOn: null
                 };
               cursor.count({}, function(err, c) {
                 if(c == 0) {
@@ -325,6 +326,7 @@ ioSocket.on('connection', function (socket) {
                     msg.content = chat.content;
                     msg.toUserId = chat.toUser;
                     msg.fromUserId = chat.fromUser;
+                    msg.createdOn = chat.createdOn;
                     socket.emit('event of chat on server', msg);
                   });
                   if(c > 10) {
@@ -368,12 +370,14 @@ ioSocket.on('connection', function (socket) {
                 chatMsg  = {
                   content: null,
                   toUserId: null,
-                  fromUserId: null
+                  fromUserId: null,
+                  createdOn: null
                 };
               stream.on('data', function (chat) {
                 chatMsg.content = chat.content;
                 chatMsg.toUserId = chat.toUser;
                 chatMsg.fromUserId = chat.fromUser;
+                chatMsg.createdOn = chat.createdOn;
                 socket.emit('event of chat on server', chatMsg);
               });
               socket.emit('hide spinner');

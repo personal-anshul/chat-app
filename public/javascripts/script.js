@@ -79,7 +79,8 @@ $('#btn-send-message').on("click", function () {
       $('#messages').html('');
     }
     if($('#messages').html().indexOf('Select user from top right hamgurber menu to start chat with them.') == -1) {
-      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.fromUserId + ": </b>" +  msg.content + "</div>"));
+      var chatTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).toJSON().split('T');
+      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.fromUserId + ": </b>" +  msg.content + "<small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
       $('#input-message').val('');
     }
   }
@@ -261,11 +262,12 @@ socket.on('event of chat on server', function (data) {
       $('#messages').html('');
     }
     if($('#messages').html().indexOf('Select user from top right hamgurber menu to start chat with them.') == -1) {
+      var chatTime = new Date(data.createdOn).toJSON().split('T');
       if($('#loggedIn-user').html() == data.fromUserId.trim()) {
-        $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUserId + ": </b>" + data.content + "</div>"));
+        $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUserId + ": </b>" + data.content + "<small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
       }
       else {
-        $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.fromUserId + ": </b>" + data.content + "</div>"));
+        $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.fromUserId + ": </b>" + data.content + "<small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
       }
     }
   }
