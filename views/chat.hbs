@@ -47,7 +47,6 @@
     </div>
   </section>
 </footer>
-
 <div class="col-xs-12">
   <!-- Modal popup -->
   <section id="attach-file-popup" class="modal fade attach-file-popup" role="dialog">
@@ -55,7 +54,8 @@
       <div class="modal-content col-xs-12">
        <form id="uploadForm"
          enctype="multipart/form-data"
-         action="/api/photo?id=22"
+         action="/api/photo"
+         onsubmit="addUserInURL()"
          method="post">
           <div class="modal-header col-xs-12">
             <h4 class="modal-title">Browser the file to attach</h4>
@@ -63,9 +63,7 @@
           <div class="modal-body col-xs-12">
             <input type="file" name="dataFile" id="textbox-attach-file"/>
             <br>
-            <img id="img-uploaded" src="" width="200" style="display:none;" />
-            <br>
-            <div id="disp_tmp_path"></div>
+            <img id="file-uploaded" class="preview-file-uploaded" src="" width="200" style="display:none;" />
           </div>
           <div class="modal-footer col-xs-12">
             <input id="submit-upload-popup" class="btn btn-primary" type="submit" value="Upload" name="submit">
@@ -76,7 +74,6 @@
     </div>
   </section>
 </div>
-
 {{#if isNewUser}}
 <div class="col-xs-12">
   <!-- Modal popup -->

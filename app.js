@@ -5,8 +5,8 @@ var express = require('express'),
   http = require('http'),
   bcrypt = require('bcryptjs'),
   path = require('path'),
+  // mime = require('mime'),
   cookieParser = require('cookie-parser'),
-  methodOverride = require('method-override'),
   bodyParser = require('body-parser'),
   multer  =   require('multer'),
   fs = require('fs'), // required for file serving
@@ -17,7 +17,8 @@ var express = require('express'),
       callback(null, './uploads');
     },
     filename: function (req, file, callback) {
-      callback(null, file.fieldname + '-' + Date.now());
+      //TODO: get the file type and use that as file extension while uploading
+      callback(null, req.session.user + '-' + req.query.id + '-' + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9));
     }
   }),
   upload = multer({ storage : storage}).single('dataFile');
@@ -42,7 +43,7 @@ function isValid(value) {
 var Session = require('express-session');
 var SessionStore = require('session-file-store')(Session);
 var session = Session({
-  store: new SessionStore({path: __dirname+'/tmp/sessions'}),
+  store: new SessionStore({path: __dirname + '/tmp/sessions'}),
   secret: '!@#456123$%^789&*()',
   resave: true,
   saveUninitialized: true
@@ -59,7 +60,6 @@ app.use(express.favicon("public/images/favicon.ico"));
 app.use(express.logger('dev'));
 app.use(express.cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(methodOverride());
 app.use(session);
 app.use(app.router);
 app.use(require('less-middleware')(path.join(__dirname, 'public')));
@@ -81,21 +81,30 @@ ioSocket.use(ioSession);
 app.get('/', routes.index);
 app.get('/logout', routes.logout);
 app.get('/chat', chat.chatMsg);
-
-// app.post('/chat', function () {
-//   console.log("query - " + req.query.id);
-// });
-
 //post request to upload data
 app.post('/api/photo', function(req,res){
   upload(req,res,function(err) {
     if(err) {
       return res.end("Error uploading file.");
     }
+    //TODO: do not reload the page
     res.redirect("/chat");
   });
 });
-
+app.get('/download', function(req, res){
+  var file = __dirname + "/uploads/";
+  //TODO: extract the file type once uploaded with the same while downloading
+  if(req.query.id == req.session.user || req.query.name == req.session.user) {
+    file = file + req.query.id + "-" + req.query.name + "-" + req.query.span;
+  }
+  // var mimetype = mime.lookup(file);
+  // res.setHeader('Content-type', mimetype);
+  //provide file name
+  var filename = path.basename(file);
+  res.setHeader('Content-disposition', 'attachment; filename=file_' + filename.split('-')[2]);
+  var filestream = fs.createReadStream(file);
+  filestream.pipe(res);
+});
 //post request for registration and login
 app.post('/', function (req, res) {
   var password = isValid(req.body.userPassword) ? req.body.userPassword : req.body.userNewPassword,
@@ -411,7 +420,7 @@ ioSocket.on('connection', function (socket) {
                 content: message.content,
                 fromUser: socket.handshake.session.user,
                 toUser: socket.handshake.session.friend,
-                createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
+                createdOn: message.createdOn
                },
                function (err, o) {
                 if (err) {
@@ -432,11 +441,41 @@ ioSocket.on('connection', function (socket) {
     });
   });
 
-  //read file  attached on client
-  socket.on('read file', function (file) {
-    fs.readFile(file, function(err, buf){
-      socket.broadcast.emit('file received', { image: true, buffer: buf.toString('base64') });
-      console.log('got image');
+  //event handler for file received
+  socket.on('file received', function () {
+    var userSent = socket.handshake.session.user,
+      userReceived = socket.handshake.session.friend;
+    global.MongoClient.connect(global.url, function (err, db) {
+      if(err){
+        console.warn(err.message);
+      }
+      else {
+        if(userSent && userReceived) {
+          db.collection('user_info').findOne({"$query": {"userId": userSent}}, function(err, user) {
+            if(user) {
+              var collection = db.collection('chat_msg');
+              collection.insert({
+                content: null,
+                fromUser: userSent,
+                toUser: userReceived,
+                createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
+               },
+               function (err, o) {
+                if (err) {
+                  console.warn(err.message);
+                }
+                else {
+                  console.info("file received entry inserted into db");
+                  socket.broadcast.emit('notify file received', userSent, userReceived);
+                }
+              });
+            }
+            else {
+              socket.handshake.session.user = null;
+            }
+          });
+        }
+      }
     });
   });
 });
