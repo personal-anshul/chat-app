@@ -17,7 +17,6 @@ var express = require('express'),
       callback(null, './uploads');
     },
     filename: function (req, file, callback) {
-      //TODO: get the file type and use that as file extension while uploading
       var fileExtension = file.originalname.split('.'),
         fileName = req.session.user + '-' + req.query.id + '-' + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9);
       callback(null, fileName + "." + fileExtension[fileExtension.length - 1]);
@@ -83,8 +82,8 @@ ioSocket.use(ioSession);
 app.get('/', routes.index);
 app.get('/logout', routes.logout);
 app.get('/chat', chat.chatMsg);
-//get request to upload data
-app.get('/api/photo', function(req,res){
+//post request to upload data
+app.post('/api/photo', function(req,res){
   upload(req,res,function(err) {
     if(err) {
       return res.end("Error uploading file.");
@@ -95,7 +94,6 @@ app.get('/api/photo', function(req,res){
 });
 app.get('/download', function(req, res){
   var file = __dirname + "/uploads/";
-  //TODO: extract the file type once uploaded with the same while downloading
   if(req.query.id == req.session.user || req.query.name == req.session.user) {
     file = file + req.query.id + "-" + req.query.name + "-" + req.query.span;
   }
@@ -324,7 +322,8 @@ ioSocket.on('connection', function (socket) {
                   content: null,
                   toUserId: null,
                   fromUserId: null,
-                  createdOn: null
+                  createdOn: null,
+                  fileType: null
                 };
               cursor.count({}, function(err, c) {
                 if(c == 0) {
@@ -337,6 +336,7 @@ ioSocket.on('connection', function (socket) {
                     msg.content = chat.content;
                     msg.toUserId = chat.toUser;
                     msg.fromUserId = chat.fromUser;
+                    msg.fileType = chat.fileType;
                     msg.createdOn = chat.createdOn;
                     socket.emit('event of chat on server', msg);
                   });
@@ -382,12 +382,14 @@ ioSocket.on('connection', function (socket) {
                   content: null,
                   toUserId: null,
                   fromUserId: null,
+                  fileType: null,
                   createdOn: null
                 };
               stream.on('data', function (chat) {
                 chatMsg.content = chat.content;
                 chatMsg.toUserId = chat.toUser;
                 chatMsg.fromUserId = chat.fromUser;
+                chatMsg.fileType = chat.fileType;
                 chatMsg.createdOn = chat.createdOn;
                 socket.emit('event of chat on server', chatMsg);
               });
@@ -422,6 +424,7 @@ ioSocket.on('connection', function (socket) {
                 content: message.content,
                 fromUser: socket.handshake.session.user,
                 toUser: socket.handshake.session.friend,
+                fileType: null,
                 createdOn: message.createdOn
                },
                function (err, o) {
@@ -444,7 +447,7 @@ ioSocket.on('connection', function (socket) {
   });
 
   //event handler for file received
-  socket.on('file received', function () {
+  socket.on('file received', function (fileType) {
     var userSent = socket.handshake.session.user,
       userReceived = socket.handshake.session.friend;
     global.MongoClient.connect(global.url, function (err, db) {
@@ -460,6 +463,7 @@ ioSocket.on('connection', function (socket) {
                 content: null,
                 fromUser: userSent,
                 toUser: userReceived,
+                fileType: fileType,
                 createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
                },
                function (err, o) {
@@ -468,7 +472,7 @@ ioSocket.on('connection', function (socket) {
                 }
                 else {
                   console.info("file received, entry inserted into db.");
-                  socket.broadcast.emit('notify file received', userSent, userReceived);
+                  socket.broadcast.emit('notify file received', userSent, userReceived, fileType);
                 }
               });
             }

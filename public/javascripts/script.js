@@ -13,18 +13,16 @@ function addUserInURL(e) {
     if(fileType.length == 2) {
       document.getElementById("uploadForm").method = "post";
       document.getElementById("uploadForm").action = "/api/photo?id=" + $('.chat-with-user').html().split('<br>')[0];
-      socket.emit('file received');
-      document.location.href= "/api/photo?id=" + $('.chat-with-user').html().split('<br>')[0];
+      $('#submit-form').click();
+      socket.emit('file received', fileType[1]);
       return true;
     }
     else {
-      $('#invalid-upload').append("<p>Provide a valid file name with proper file extension.</p>");
+      $('#invalid-upload').html("<p>Provide a valid file name. File name should not have period(.) in it and should have proper file extension, it's mandatory. (Ex: my-file.txt)</p>");
       return false;
     }
   }
   else {
-    console.log('in')
-    e.preventDefault();
     return false;
   }
 }
@@ -164,14 +162,14 @@ $('#textbox-attach-file').on("change", function(event) {
     $("#no-preview-msg").html("<em>No preview available.</em>");
   }
   $('#submit-upload-popup').removeAttr("disabled");
-});
-
-$('#submit-upload-popup').on("click", function () {
+  $('#invalid-upload').html("");
 });
 
 $('#close-upload-popup').on("click", function () {
   setTimeout(function() {
     $("#file-uploaded").fadeOut("fast").attr('src', "");
+    $('#submit-upload-popup').attr("disabled", "disabled");
+    $('#invalid-upload').html("");
     document.getElementById('textbox-attach-file').value = "";
     $("#no-preview-msg").html("");
   }, 200);
@@ -296,7 +294,7 @@ socket.on('event of chat on server', function (data) {
       var chatTime = new Date(data.createdOn).toJSON().split('T');
       if($('#loggedIn-user').attr('title') == data.fromUserId.trim()) {
         if(data.content == null) {
-          $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + data.toUserId + ". Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUserId + "&name=" + data.toUserId + "&span=" + data.createdOn.toString().slice(0,9) + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+          $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + data.toUserId + ". Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUserId + "&name=" + data.toUserId + "&span=" + data.createdOn.toString().slice(0,9) + "." + data.fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
         else {
           $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUserId + ": </b>" + data.content + "<small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
@@ -304,7 +302,7 @@ socket.on('event of chat on server', function (data) {
       }
       else {
         if(data.content == null) {
-          $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + data.fromUserId + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUserId + "&name=" + data.toUserId + "&span=" + data.createdOn.toString().slice(0,9) + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+          $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + data.fromUserId + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUserId + "&name=" + data.toUserId + "&span=" + data.createdOn.toString().slice(0,9) + "." + data.fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
         else {
           $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.fromUserId + ": </b>" + data.content + "<small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
@@ -316,13 +314,13 @@ socket.on('event of chat on server', function (data) {
 });
 
 //socket handler to display file received
-socket.on("notify file received", function(userSent, userReceived) {
+socket.on("notify file received", function(userSent, userReceived, fileType) {
   var chatTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).toJSON().split('T');
   if($('#loggedIn-user').attr('title') == userSent && $('.chat-with-user').html().split('<br>')[0] == userReceived) {
-    $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + userReceived + ". Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+    $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + userReceived + ". Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "." + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
   }
   else if($('#loggedIn-user').attr('title') == userReceived && $('.chat-with-user').html().split('<br>')[0] == userSent) {
-    $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + userSent + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+    $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + userSent + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "." + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
   }
   else {
     console.log('not for you');
