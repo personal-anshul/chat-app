@@ -83,8 +83,8 @@ ioSocket.use(ioSession);
 app.get('/', routes.index);
 app.get('/logout', routes.logout);
 app.get('/chat', chat.chatMsg);
-//post request to upload data
-app.post('/api/photo', function(req,res){
+//get request to upload data
+app.get('/api/photo', function(req,res){
   upload(req,res,function(err) {
     if(err) {
       return res.end("Error uploading file.");

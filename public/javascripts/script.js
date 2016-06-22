@@ -7,10 +7,26 @@ $(document).ready(function(){
 });
 
 //change post request to add user detail
-function addUserInURL() {
-  document.getElementById("uploadForm").action = "/api/photo?id=" + $('.chat-with-user').html().split('<br>')[0];
-  socket.emit('file received');
-  return true;
+function addUserInURL(e) {
+  if(document.getElementById('textbox-attach-file').value) {
+    var fileType = document.getElementById('textbox-attach-file').value.split('.');
+    if(fileType.length == 2) {
+      document.getElementById("uploadForm").method = "post";
+      document.getElementById("uploadForm").action = "/api/photo?id=" + $('.chat-with-user').html().split('<br>')[0];
+      socket.emit('file received');
+      document.location.href= "/api/photo?id=" + $('.chat-with-user').html().split('<br>')[0];
+      return true;
+    }
+    else {
+      $('#invalid-upload').append("<p>Provide a valid file name with proper file extension.</p>");
+      return false;
+    }
+  }
+  else {
+    console.log('in')
+    e.preventDefault();
+    return false;
+  }
 }
 
 //hide/close user list when ESC is pressed
@@ -147,7 +163,7 @@ $('#textbox-attach-file').on("change", function(event) {
   else {
     $("#no-preview-msg").html("<em>No preview available.</em>");
   }
-  // socket.emit('read file', tmppath);
+  $('#submit-upload-popup').removeAttr("disabled");
 });
 
 $('#submit-upload-popup').on("click", function () {

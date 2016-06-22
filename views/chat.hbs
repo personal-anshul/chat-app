@@ -13,14 +13,21 @@
   </h3>
 </section>
 <main class="col-xs-12 main">
-  <section class="col-xs-12">
-    <div class="spinner"><div class="glyphicon glyphicon-refresh spinning"></div></div>
-    <article id="messages" class="col-xs-12 message-panel">
-      <h1 class="text-center no-chat">
-        Select user from top right hamgurber menu to start chat with them.
-      </h1>
-    </article>
-  </section>
+  <div id="scrollbar1" class="scrollbar-panel">
+    <div class="scrollbar"><div class="track"><div class="thumb"><div class="end"></div></div></div></div>
+    <div class="viewport">
+      <div class="overview">
+        <section class="col-xs-12">
+          <div class="spinner"><div class="glyphicon glyphicon-refresh spinning"></div></div>
+          <article id="messages" class="col-xs-12 message-panel">
+            <h1 class="text-center no-chat">
+              Select user from top right hamgurber menu to start chat with them.
+            </h1>
+          </article>
+        </section>
+      </div>
+    </div>
+  </div>
 </main>
 <footer class="col-xs-12 footer">
   <aside class="col-xs-12 typing-user-panel">
@@ -54,21 +61,23 @@
   <section id="attach-file-popup" class="modal fade attach-file-popup" role="dialog">
     <div class="modal-dialog">
       <div class="modal-content col-xs-12">
-       <form id="uploadForm"
-         enctype="multipart/form-data"
-         action="/api/photo"
-         onsubmit="addUserInURL()"
-         method="post">
+        <form
+          id="uploadForm"
+          enctype="multipart/form-data"
+          action="/api/photo">
           <div class="modal-header col-xs-12">
             <h4 class="modal-title">Browser the file to attach</h4>
           </div>
           <div class="modal-body col-xs-12">
             <input type="file" name="dataFile" id="textbox-attach-file"/>
             <br>
-            <img id="file-uploaded" class="preview-file-uploaded" src="" width="200" style="display:none;" />
+            <img id="file-uploaded" class="preview-file-uploaded" src="" style="display:none;" />
+            <div id="no-preview-msg"></div>
+            <br>
+            <p id="invalid-upload" class="error-msg"></p>
           </div>
           <div class="modal-footer col-xs-12">
-            <input id="submit-upload-popup" class="btn btn-primary" type="submit" value="Upload" name="submit">
+            <input id="submit-upload-popup" class="btn btn-primary" type="button" value="Upload" name="submit" disabled onclick="addUserInURL()">
             <button id="close-upload-popup" type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
           </div>
         </form>
@@ -103,7 +112,7 @@
   $(document).ready(function(){
     $('#userId-popup').modal('show');
     setTimeout(function() {
-      $(".scrollbar-panel").tinyscrollbar();
-    }, 3000)
+      $("#scrollbar-panel").tinyscrollbar();
+    }, 3000);
   });
 </script>
