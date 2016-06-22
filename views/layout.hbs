@@ -3,8 +3,8 @@
   <head>
     <title>{{title}}</title>
     <link rel='stylesheet' href='/library/bootstrap/dist/css/bootstrap.css' />
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,400italic,300' rel='stylesheet' type='text/css'>
-    <link href='https://fonts.googleapis.com/css?family=Indie+Flower' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Stalemate' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Jura:400,600,500,300' rel='stylesheet' type='text/css'>
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <script type="text/javascript"  src='/library/jquery/dist/jquery.min.js'></script>
   </head>
@@ -12,48 +12,59 @@
     <header class="col-xs-12 header">
       <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
         <div class="navbar-header">
+          <div class="beta-panel">
+            <span class="beta">beta</span>
+            <img class="logo" src="/images/favicon.ico" alt="logo" />
+          </div>
           <a class="col-xs-5 navbar-brand" href="#">
             <div class="col-xs-12"><h1 class="app-title">{{title}}<sup>&copy;</sup></h1></div>
           </a>
           {{#if loggedInUser}}
           <div class="col-xs-7 user-detail text-right">
-            <h4 class="userId-detail">{{userName}} (<span id="loggedIn-user">{{loggedInUser}}</span>) !! <a href="/logout">logout</a></h4>
+            <h4 class="userId-detail" title={{userName}}({{loggedInUser}})>{{userNameShort}} (<span id="loggedIn-user" title="{{loggedInUser}}">{{loggedInUserShort}}</span>) !! <a href="/logout">logout</a></h4>
             <button id="btn-toggle-user-list" type="button" class="navbar-toggle" data-toggle="collapse" data-target="#user-list">
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <img class="logo" src="/images/favicon.ico" alt="logo" />
           </div>
           {{/if}}
         </div>
         <div class="collapse navbar-collapse" id="user-list">
-          <ul class="nav navbar-nav" id="nav-user-list">
-            <!--
-            <li class="active"><a href="#">Anshul</a></li>
-            <li><a href="#">Praful</a></li>
-            <li><a href="#">Naga</a></li>
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                Java<b class="caret"></b>
-              </a>
-              <ul class="dropdown-menu">
-                <li><a href="#">jmeter</a></li>
-                <li><a href="#">EJB</a></li>
-                <li><a href="#">Jasper Report</a></li>
-                <li class="divider"></li>
-                <li><a href="#">Separated link</a></li>
-                <li class="divider"></li>
-                <li><a href="#">One more separated link</a></li>
-              </ul>
-            </li> -->
-          </ul>
+          <div id="scrollbar-panel" class="scrollbar-panel">
+            <div class="scrollbar"><div class="track"><div class="thumb"><div class="end"></div></div></div></div>
+            <div class="viewport">
+              <div class="overview">
+                <ul class="nav navbar-nav" id="nav-user-list">
+                  <!--
+                  <li class="active"><a href="#">Anshul</a></li>
+                  <li><a href="#">Praful</a></li>
+                  <li><a href="#">Naga</a></li>
+                  <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                      Java<b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a href="#">jmeter</a></li>
+                      <li><a href="#">EJB</a></li>
+                      <li><a href="#">Jasper Report</a></li>
+                      <li class="divider"></li>
+                      <li><a href="#">Separated link</a></li>
+                      <li class="divider"></li>
+                      <li><a href="#">One more separated link</a></li>
+                    </ul>
+                  </li> -->
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </nav>
     </header>
     {{{body}}}
   </body>
 </html>
-<script type="text/javascript"  src='/library/bootstrap/dist/js/bootstrap.min.js'></script>
+<script type="text/javascript" src='/library/bootstrap/dist/js/bootstrap.min.js'></script>
 <script type="text/javascript" src='/socket.io/socket.io.js'></script>
 <script type="text/javascript" src="/javascripts/script.js"></script>
+<script type="text/javascript" src="/javascripts/jquery.scrollbar.min.js"></script>

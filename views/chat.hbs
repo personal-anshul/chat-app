@@ -1,12 +1,14 @@
 <section class="col-xs-12 section-greeting">
-  <h3 class="col-md-10 col-xs-12">
+  <h3 class="col-md-10 col-xs-12 greeting-user-panel">
     <div class="col-sm-6 col-xs-12">
       <img class="display-picture" src="/images/no-user.png" alt="user" />
       <span class="chat-with-user">
         <span class="hidden-xs">Welcome to </span>{{title}}<sup>&reg;</sup>
       </span>
     </div>
-    <div class="load-chat hide col-sm-6 col-xs-12"><a class="pull-right" href="javascript:void(0)"><small>load more..</small></a></div>
+    <div class="load-chat hide col-sm-6 col-xs-12">
+      <a class="pull-right" href="javascript:void(0)"><small class="load-chat-text">load more..</small></a>
+    </div>
     <div class="loaded-chat hide col-sm-6 col-xs-12"><small class="pull-right">loaded all chat msgs..</small></div>
   </h3>
 </section>
@@ -22,7 +24,7 @@
 </main>
 <footer class="col-xs-12 footer">
   <aside class="col-xs-12 typing-user-panel">
-    <small id="typing-user"></small>
+    <small id="typing-user" class="typing-user-text"></small>
   </aside>
   <section class="form-inline text-right">
     <div class="form-group col-sm-push-3 col-xs-push-0 col-sm-7 col-xs-12">
@@ -79,8 +81,8 @@
   <!-- Modal popup -->
   <section id="userId-popup" class="modal modal-userId fade" role="dialog">
     <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
+      <div class="modal-content col-xs-12">
+        <div class="modal-header col-xs-12">
           <h4 class="modal-title">Please make a note</h4>
         </div>
         <div class="modal-body col-xs-12">
@@ -89,7 +91,7 @@
           <p>Here's your user id - <strong>{{loggedInUser}}</strong>. Please make a note as you can use it for future login(s).</p><br>
           <small> - Windbag Support Team </small>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer col-xs-12">
           <button type="button" class="btn btn-primary closePopup">Close</button>
         </div>
       </div>
@@ -100,5 +102,8 @@
 <script>
   $(document).ready(function(){
     $('#userId-popup').modal('show');
+    setTimeout(function() {
+      $(".scrollbar-panel").tinyscrollbar();
+    }, 3000)
   });
 </script>

@@ -18,7 +18,9 @@ var express = require('express'),
     },
     filename: function (req, file, callback) {
       //TODO: get the file type and use that as file extension while uploading
-      callback(null, req.session.user + '-' + req.query.id + '-' + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9));
+      var fileExtension = file.originalname.split('.'),
+        fileName = req.session.user + '-' + req.query.id + '-' + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9);
+      callback(null, fileName + "." + fileExtension[fileExtension.length - 1]);
     }
   }),
   upload = multer({ storage : storage}).single('dataFile');
@@ -465,7 +467,7 @@ ioSocket.on('connection', function (socket) {
                   console.warn(err.message);
                 }
                 else {
-                  console.info("file received entry inserted into db");
+                  console.info("file received, entry inserted into db.");
                   socket.broadcast.emit('notify file received', userSent, userReceived);
                 }
               });

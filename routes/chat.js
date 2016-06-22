@@ -15,7 +15,15 @@ exports.chatMsg = function(req, res) {
           if(isUser) {
             var isNewUser = global.newUser;
             global.newUser = null;
-            res.render('chat', { title: 'Windbag', loggedInUser: user, userName: req.session.newUser, isNewUser: isNewUser, typingUser: global.userInfoTyping });
+            res.render('chat', {
+              title: 'Windbag',
+              loggedInUser: user,
+              loggedInUserShort: (user.length > 10 ? user.slice(0,10) + "..." : user),
+              userName: req.session.newUser,
+              userNameShort: (req.session.newUser.length > 10 ? req.session.newUser.slice(0,10) + "..." : req.session.newUser),
+              isNewUser: isNewUser,
+              typingUser: global.userInfoTyping
+            });
           }
           else {
             global.errorMessage = "User has been removed by Admin.";
