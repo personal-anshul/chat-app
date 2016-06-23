@@ -2,7 +2,7 @@
   <h3 class="col-md-10 col-xs-12 greeting-user-panel">
     <div class="col-sm-6 col-xs-12">
       <img class="display-picture" src="/images/no-user.png" alt="user" />
-      <span class="chat-with-user">
+      <span id="chat-with-user-info" class="chat-with-user" data-info="">
         <span class="hidden-xs">Welcome to </span>{{title}}<sup>&reg;</sup>
       </span>
     </div>
@@ -13,21 +13,14 @@
   </h3>
 </section>
 <main class="col-xs-12 main">
-  <div id="scrollbar1" class="scrollbar-panel">
-    <div class="scrollbar"><div class="track"><div class="thumb"><div class="end"></div></div></div></div>
-    <div class="viewport">
-      <div class="overview">
-        <section class="col-xs-12">
-          <div class="spinner"><div class="glyphicon glyphicon-refresh spinning"></div></div>
-          <article id="messages" class="col-xs-12 message-panel">
-            <h1 class="text-center no-chat">
-              Select user from top right hamgurber menu to start chat with them.
-            </h1>
-          </article>
-        </section>
-      </div>
-    </div>
-  </div>
+  <section class="col-xs-12">
+    <div class="spinner"><div class="glyphicon glyphicon-refresh spinning"></div></div>
+    <article id="messages" class="col-xs-12 message-panel">
+      <h1 class="text-center no-chat">
+        Select user from top right hamgurber menu to start chat with them.
+      </h1>
+    </article>
+  </section>
 </main>
 <footer class="col-xs-12 footer">
   <aside class="col-xs-12 typing-user-panel">
@@ -65,7 +58,6 @@
           id="uploadForm"
           enctype="multipart/form-data"
           action="/api/photo">
-          <input type="submit" class="submit-form" id="submit-form"/>
           <div class="modal-header col-xs-12">
             <h4 class="modal-title">Browser the file to attach</h4>
           </div>
@@ -80,6 +72,7 @@
           <div class="modal-footer col-xs-12">
             <input id="submit-upload-popup" class="btn btn-primary" type="button" value="Upload" name="submit" disabled="disabled" onclick="addUserInURL()">
             <button id="close-upload-popup" type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            <input type="submit" class="submit-form" id="submit-form"/>
           </div>
         </form>
       </div>
@@ -112,8 +105,5 @@
 <script>
   $(document).ready(function(){
     $('#userId-popup').modal('show');
-    setTimeout(function() {
-      $("#scrollbar-panel").tinyscrollbar();
-    }, 3000);
   });
 </script>

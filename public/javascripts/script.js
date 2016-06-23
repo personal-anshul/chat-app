@@ -2,9 +2,53 @@
 var socket = io();
 
 //scroll page till bottom
-$(document).ready(function(){
+$(document).ready(function() {
+  var code = getCode('deepak_9934')
+  readCode(code);
   window.scrollTo(0, document.body.scrollHeight);
 });
+
+//encryption
+function getCode(stringData) {
+  var series = "1325849170636298",
+    alphabets = "qwertyuiopasdfghjklzxcvbnm_1234567890!@#%^&*",
+    code = "", temp;
+  for(i = 0; i < stringData.length; i++) {
+    temp = alphabets[parseInt(alphabets.indexOf(stringData[i])) + parseInt(series[i])];
+    code = code + (temp == undefined ? "$" + stringData[i] : temp);
+  }
+  return code;
+}
+
+//decryption
+function readCode(stringData) {
+  var series = "1325849170636298",
+    alphabets = "qwertyuiopasdfghjklzxcvbnm_1234567890!@#%^&*",
+    code = "", temp;
+  for(i = 0, j = 0; i < stringData.length; i++, j++) {
+    if(stringData[i] == "$") {
+      temp = stringData[++i];
+    }
+    else {
+      temp = alphabets[parseInt(alphabets.indexOf(stringData[i])) - parseInt(series[j])];
+    }
+    code = code + temp;
+  }
+  return code;
+}
+
+//check if user is in proper window to get chat msg and chat have already been initiated
+function checkPageStatus() {
+  if($('#messages').html().indexOf('Oops.. There is no chat between you both yet.') != -1) {
+    $('#messages').html('');
+  }
+  if($('#messages').html().indexOf('Select user from top right hamgurber menu to start chat with them.') == -1) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
 
 //change post request to add user detail
 function addUserInURL(e) {
@@ -12,9 +56,11 @@ function addUserInURL(e) {
     var fileType = document.getElementById('textbox-attach-file').value.split('.');
     if(fileType.length == 2) {
       document.getElementById("uploadForm").method = "post";
-      document.getElementById("uploadForm").action = "/api/photo?id=" + $('.chat-with-user').html().split('<br>')[0];
-      $('#submit-form').click();
+      document.getElementById("uploadForm").action = "/api/photo?id=" + readCode($('#chat-with-user-info').attr("data-info"));
       socket.emit('file received', fileType[1]);
+      setTimeout(function() {
+        $('#submit-form').click();
+      }, 100);
       return true;
     }
     else {
@@ -79,7 +125,7 @@ $('.closePopup').on("click", function () {
 //Select user to start chat
 $('#nav-user-list').delegate('li', 'click', function(elm) {
   var userInfo = $(this).attr('data-value').trim();
-  if($('.chat-with-user').html().split('<br>')[0] != $(this).html().split('(')[0].trim()) {
+  if(readCode($('#chat-with-user-info').attr("data-info")) != readCode($(this).attr("data-info"))) {
     $('li').removeClass('active');
     $('#messages').html('');
     $('#input-message').val('');
@@ -104,15 +150,12 @@ $('#btn-send-message').on("click", function () {
   };
   msg.content = $('#input-message').val();
   msg.fromUserId = $('#loggedIn-user').attr('title');
-  msg.toUserId = $('.chat-with-user').html().split('<br>')[0];
+  msg.toUserId = readCode($('#chat-with-user-info').attr("data-info"));
   msg.createdOn = new Date().setMinutes(new Date().getMinutes() + 330).valueOf();
   if(msg.content !== "") {
     socket.emit('event of chat on client', msg);
     socket.emit('remove typing userinfo');
-    if($('#messages').html().indexOf('Oops.. There is no chat between you both yet.') != -1) {
-      $('#messages').html('');
-    }
-    if($('#messages').html().indexOf('Select user from top right hamgurber menu to start chat with them.') == -1) {
+    if(checkPageStatus()) {
       var chatTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).toJSON().split('T');
       $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.fromUserId + ": </b>" +  msg.content + "<small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
       $('#input-message').val('');
@@ -159,12 +202,13 @@ $('#textbox-attach-file').on("change", function(event) {
     $("#file-uploaded").fadeIn("fast").attr('src', URL.createObjectURL(event.target.files[0]));
   }
   else {
-    $("#no-preview-msg").html("<em>No preview available.</em>");
+    $("#no-preview-msg").html("<em>Ouch!! Preview is not available.</em>");
   }
   $('#submit-upload-popup').removeAttr("disabled");
   $('#invalid-upload').html("");
 });
 
+//remove all details whiling closing the upload popup
 $('#close-upload-popup').on("click", function () {
   setTimeout(function() {
     $("#file-uploaded").fadeOut("fast").attr('src', "");
@@ -183,25 +227,25 @@ socket.on('remove users from list', function() {
 //socket handler to load all users
 socket.on('load all users', function (user) {
   if(user.userId != $('#loggedIn-user').attr('title')) {
-    if(user.isConnected == 1) {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-online">Online</span></li>');
-    }
-    else {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-offline">Offline</span></li>');
-    }
+    var statusBar = user.isConnected == 1 ? "<span class='user-online'>Online</span>" : "<span class='user-offline'>Offline</span>";
+    $('#nav-user-list').append('<li class="user-list-item" data-info="' + getCode(user.userId) + '" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - ' + statusBar + '</li>');
   }
+  setTimeout(function () {
+    $("#scrollbar-panel").tinyscrollbar();
+  }, 3000);
 });
 
 //socket handler to if no user to load
 socket.on('no user to load', function () {
-  $('#nav-user-list').append('<li class="user-list-item text-center" data-value=""> Ahh!! Looks like there is no User to chat.. </li>');
+  $('#nav-user-list').append('<li class="user-list-item text-center"> Ahh!! Looks like there is no User to chat.. </li>');
 });
 
 //socket handler to load user details with whom loggined user wanted to chat
 socket.on('load user details for chat', function (userDetail, currentUser) {
   if($('#loggedIn-user').attr('title') == currentUser) {
     $('.display-picture').css({"display": "inline-block"});
-    $('.chat-with-user').html(userDetail);
+    $('#chat-with-user-info').html(userDetail);
+    $('#chat-with-user-info').attr("data-info", getCode(userDetail.split('<br>')[0]));
   }
 });
 
@@ -245,7 +289,7 @@ socket.on('hide spinner', function (data) {
 //socket handler to update typing userinfo
 socket.on('update typing userinfo', function (userTyping, typingFor) {
   if(userTyping != null) {
-    if($('#loggedIn-user').attr('title') == typingFor && $('.chat-with-user').html().split('<br>')[0] == userTyping) {
+    if($('#loggedIn-user').attr('title') == typingFor && readCode($('#chat-with-user-info').attr("data-info")) == userTyping) {
       $('#typing-user').html("<span class='user-typing'>" + userTyping + ' is typing...</span>');
     }
     else {
@@ -262,14 +306,10 @@ socket.on('update typing userinfo', function (userTyping, typingFor) {
 //socket handler to update list of all users to show online/offline status
 socket.on('update all users', function (user) {
   if(user.userId != $('#loggedIn-user').attr('title')) {
-    if(user.isConnected == 1) {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-online">Online</span></li>');
-    }
-    else {
-      $('#nav-user-list').append('<li class="user-list-item" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - <span class="user-offline">Offline</span></li>');
-    }
+    var statusBar = user.isConnected == 1 ? '<span class="user-online">Online</span>' : '<span class="user-offline">Offline</span>';
+    $('#nav-user-list').append('<li class="user-list-item" data-info="' + getCode(user.userId) + '" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - ' + statusBar + '</li>');
   }
-  if(user.userId == $('.chat-with-user').html().split('<br>')[0]) {
+  if(user.userId == readCode($('#chat-with-user-info').attr("data-info"))) {
     var lastSeen = new Date(user.lastConnected).toJSON().split('T');
     if(user.isConnected == 1) {
       $('.user-last-seen').html('Online');
@@ -282,15 +322,18 @@ socket.on('update all users', function (user) {
 
 //socket handler to load chats
 socket.on('event of chat on server', function (data) {
-  setTimeout(function () {
-    $('#scrollbar1').tinyscrollbar();
-  }, 500);
-  if(($('#loggedIn-user').attr('title') == data.toUserId.trim() || $('#loggedIn-user').attr('title') == data.fromUserId.trim())
-    && ($('.chat-with-user').html().split('<br>')[0] == data.toUserId.trim() || $('.chat-with-user').html().split('<br>')[0] == data.fromUserId.trim())) {
-    if($('#messages').html().indexOf('Oops.. There is no chat between you both yet.') != -1) {
-      $('#messages').html('');
+  if($('#loggedIn-user').attr('title') == data.toUserId.trim() && readCode($('#chat-with-user-info').attr("data-info")) != data.fromUserId.trim()) {
+    if(data.content != null) {
+      $('#file-received-notification').html(data.fromUserId + " has sent you a new msg.");
     }
-    if($('#messages').html().indexOf('Select user from top right hamgurber menu to start chat with them.') == -1) {
+    $('#file-received-notification').addClass('show-file-notification');
+    setTimeout(function() {
+      $('#file-received-notification').removeClass('show-file-notification');
+    }, 2000);
+  }
+  if(($('#loggedIn-user').attr('title') == data.toUserId.trim() || $('#loggedIn-user').attr('title') == data.fromUserId.trim())
+    && (readCode($('#chat-with-user-info').attr("data-info")) == data.toUserId.trim() || readCode($('#chat-with-user-info').attr("data-info")) == data.fromUserId.trim())) {
+    if(checkPageStatus()) {
       var chatTime = new Date(data.createdOn).toJSON().split('T');
       if($('#loggedIn-user').attr('title') == data.fromUserId.trim()) {
         if(data.content == null) {
@@ -316,14 +359,20 @@ socket.on('event of chat on server', function (data) {
 //socket handler to display file received
 socket.on("notify file received", function(userSent, userReceived, fileType) {
   var chatTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).toJSON().split('T');
-  if($('#loggedIn-user').attr('title') == userSent && $('.chat-with-user').html().split('<br>')[0] == userReceived) {
-    $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + userReceived + ". Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "." + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
-  }
-  else if($('#loggedIn-user').attr('title') == userReceived && $('.chat-with-user').html().split('<br>')[0] == userSent) {
-    $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + userSent + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "." + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
-  }
-  else {
-    console.log('not for you');
+  if(checkPageStatus()) {
+    if($('#loggedIn-user').attr('title') == userSent && readCode($('#chat-with-user-info').attr("data-info")) == userReceived) {
+      $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + userReceived + ". Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "." + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+    }
+    else if($('#loggedIn-user').attr('title') == userReceived && readCode($('#chat-with-user-info').attr("data-info")) == userSent) {
+      $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + userSent + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "." + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+    }
+    else if($('#loggedIn-user').attr('title') == userReceived) {
+      $('#file-received-notification').html(userSent + " has shared a file with you.");
+      $('#file-received-notification').addClass('show-file-notification');
+      setTimeout(function() {
+        $('#file-received-notification').removeClass('show-file-notification');
+      }, 2000);
+    }
   }
   window.scrollTo(0, document.body.scrollHeight);
 });
