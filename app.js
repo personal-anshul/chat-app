@@ -5,12 +5,24 @@ var express = require('express'),
   http = require('http'),
   bcrypt = require('bcryptjs'),
   path = require('path'),
+  // mime = require('mime'),
   cookieParser = require('cookie-parser'),
-  methodOverride = require('method-override'),
   bodyParser = require('body-parser'),
+  multer  =   require('multer'),
   fs = require('fs'), // required for file serving
   //express initialization
-  app = express();
+  app = express(),
+  storage = multer.diskStorage({
+    destination: function (req, file, callback) {
+      callback(null, './uploads');
+    },
+    filename: function (req, file, callback) {
+      var fileExtension = file.originalname.split('.'),
+        fileName = req.session.user + '-' + req.query.id + '-' + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9);
+      callback(null, fileName + "." + fileExtension[fileExtension.length - 1]);
+    }
+  }),
+  upload = multer({ storage : storage}).single('dataFile');
 
 /*Global variable*/
 global.errorMessage = null;
@@ -32,7 +44,7 @@ function isValid(value) {
 var Session = require('express-session');
 var SessionStore = require('session-file-store')(Session);
 var session = Session({
-  store: new SessionStore({path: __dirname+'/tmp/sessions'}),
+  store: new SessionStore({path: __dirname + '/tmp/sessions'}),
   secret: '!@#456123$%^789&*()',
   resave: true,
   saveUninitialized: true
@@ -49,7 +61,6 @@ app.use(express.favicon("public/images/favicon.ico"));
 app.use(express.logger('dev'));
 app.use(express.cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(methodOverride());
 app.use(session);
 app.use(app.router);
 app.use(require('less-middleware')(path.join(__dirname, 'public')));
@@ -71,7 +82,29 @@ ioSocket.use(ioSession);
 app.get('/', routes.index);
 app.get('/logout', routes.logout);
 app.get('/chat', chat.chatMsg);
-
+//post request to upload data
+app.post('/api/photo', function(req,res){
+  upload(req,res,function(err) {
+    if(err) {
+      return res.end("Error uploading file.");
+    }
+    //TODO: do not reload the page
+    res.redirect("/chat");
+  });
+});
+app.get('/download', function(req, res){
+  var file = __dirname + "/uploads/";
+  if(req.query.id == req.session.user || req.query.name == req.session.user) {
+    file = file + req.query.id + "-" + req.query.name + "-" + req.query.span;
+  }
+  // var mimetype = mime.lookup(file);
+  // res.setHeader('Content-type', mimetype);
+  //provide file name
+  var filename = path.basename(file);
+  res.setHeader('Content-disposition', 'attachment; filename=file_' + filename.split('-')[2]);
+  var filestream = fs.createReadStream(file);
+  filestream.pipe(res);
+});
 //post request for registration and login
 app.post('/', function (req, res) {
   var password = isValid(req.body.userPassword) ? req.body.userPassword : req.body.userNewPassword,
@@ -142,12 +175,10 @@ app.post('/', function (req, res) {
                     }
                   },
                   function(err, success) {
-                    console.info('isConnect updated.')
                   }
                 );
                 global.errorMessage = "";
                 users.name = user.userName;
-                console.info("user already exists in db: " + users.name);
                 req.session.user = user.userId;
                 req.session.newUser = users.name;
                 res.redirect('/chat');
@@ -193,7 +224,6 @@ ioSocket.on('connection', function (socket) {
               },
               function(err, success) {
                 socket.broadcast.emit('remove users from list');
-                console.info('isConnect updated.');
                 var userStream = db.collection('user_info').find();
                 userStream.count({}, function (err, c) {
                   if(c == 1) {
@@ -238,7 +268,6 @@ ioSocket.on('connection', function (socket) {
           },
           function(err, success) {
             socket.broadcast.emit('remove users from list');
-            console.info('isConnect updated.');
             var userStream = db.collection('user_info').find().stream();
             userStream.on('data', function (user) {
               socket.broadcast.emit('update all users', user);
@@ -292,7 +321,9 @@ ioSocket.on('connection', function (socket) {
                 msg  = {
                   content: null,
                   toUserId: null,
-                  fromUserId: null
+                  fromUserId: null,
+                  createdOn: null,
+                  fileType: null
                 };
               cursor.count({}, function(err, c) {
                 if(c == 0) {
@@ -305,6 +336,8 @@ ioSocket.on('connection', function (socket) {
                     msg.content = chat.content;
                     msg.toUserId = chat.toUser;
                     msg.fromUserId = chat.fromUser;
+                    msg.fileType = chat.fileType;
+                    msg.createdOn = chat.createdOn;
                     socket.emit('event of chat on server', msg);
                   });
                   if(c > 10) {
@@ -316,11 +349,6 @@ ioSocket.on('connection', function (socket) {
                 }
               });
               socket.emit('hide spinner');
-
-              fs.readFile('public/images/no-user.png', function(err, buf){
-                socket.emit('image', { image: true, buffer: buf.toString('base64') });
-              });
-
             }
             else {
               socket.emit('hide spinner');
@@ -353,12 +381,16 @@ ioSocket.on('connection', function (socket) {
                 chatMsg  = {
                   content: null,
                   toUserId: null,
-                  fromUserId: null
+                  fromUserId: null,
+                  fileType: null,
+                  createdOn: null
                 };
               stream.on('data', function (chat) {
                 chatMsg.content = chat.content;
                 chatMsg.toUserId = chat.toUser;
                 chatMsg.fromUserId = chat.fromUser;
+                chatMsg.fileType = chat.fileType;
+                chatMsg.createdOn = chat.createdOn;
                 socket.emit('event of chat on server', chatMsg);
               });
               socket.emit('hide spinner');
@@ -392,7 +424,8 @@ ioSocket.on('connection', function (socket) {
                 content: message.content,
                 fromUser: socket.handshake.session.user,
                 toUser: socket.handshake.session.friend,
-                createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
+                fileType: null,
+                createdOn: message.createdOn
                },
                function (err, o) {
                 if (err) {
@@ -401,6 +434,45 @@ ioSocket.on('connection', function (socket) {
                 else {
                   console.info("chat message inserted into db: " + message.content);
                   socket.broadcast.emit('event of chat on server', message);
+                }
+              });
+            }
+            else {
+              socket.handshake.session.user = null;
+            }
+          });
+        }
+      }
+    });
+  });
+
+  //event handler for file received
+  socket.on('file received', function (fileType) {
+    var userSent = socket.handshake.session.user,
+      userReceived = socket.handshake.session.friend;
+    global.MongoClient.connect(global.url, function (err, db) {
+      if(err){
+        console.warn(err.message);
+      }
+      else {
+        if(userSent && userReceived) {
+          db.collection('user_info').findOne({"$query": {"userId": userSent}}, function(err, user) {
+            if(user) {
+              var collection = db.collection('chat_msg');
+              collection.insert({
+                content: null,
+                fromUser: userSent,
+                toUser: userReceived,
+                fileType: fileType,
+                createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
+               },
+               function (err, o) {
+                if (err) {
+                  console.warn(err.message);
+                }
+                else {
+                  console.info("file received, entry inserted into db.");
+                  socket.broadcast.emit('notify file received', userSent, userReceived, fileType);
                 }
               });
             }

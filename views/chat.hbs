@@ -1,12 +1,14 @@
 <section class="col-xs-12 section-greeting">
-  <h3 class="col-md-10 col-xs-12">
+  <h3 class="col-md-10 col-xs-12 greeting-user-panel">
     <div class="col-sm-6 col-xs-12">
       <img class="display-picture" src="/images/no-user.png" alt="user" />
-      <span class="chat-with-user">
+      <span id="chat-with-user-info" class="chat-with-user" data-info="">
         <span class="hidden-xs">Welcome to </span>{{title}}<sup>&reg;</sup>
       </span>
     </div>
-    <div class="load-chat hide col-sm-6 col-xs-12"><a class="pull-right" href="javascript:void(0)"><small>load more..</small></a></div>
+    <div class="load-chat hide col-sm-6 col-xs-12">
+      <a class="pull-right" href="javascript:void(0)"><small class="load-chat-text">load more..</small></a>
+    </div>
     <div class="loaded-chat hide col-sm-6 col-xs-12"><small class="pull-right">loaded all chat msgs..</small></div>
   </h3>
 </section>
@@ -22,24 +24,68 @@
 </main>
 <footer class="col-xs-12 footer">
   <aside class="col-xs-12 typing-user-panel">
-    <small id="typing-user"></small>
+    <small id="typing-user" class="typing-user-text"></small>
   </aside>
   <section class="form-inline text-right">
     <div class="form-group col-sm-push-3 col-xs-push-0 col-sm-7 col-xs-12">
-      <input id="input-message" type="text" autofocus class="input-message form-control col-xs-12" value="" disabled="disabled" placeholder="write your message here..."/>
+      <textarea
+        id="input-message"
+        class="input-message form-control col-xs-12"
+        rows="3" cols="30"
+        disabled="disabled"
+        placeholder="write your message here...">
+      </textarea>
     </div>
-    <div class="form-group col-sm-push-3 col-xs-push-6 col-sm-2 col-xs-6">
-      <button type="button" name="button"  id="btn-send-message" class="btn btn-primary btn-send-message" disabled="disabled">Send</button>
+    <div class="form-group no-padding col-sm-push-3 col-xs-push-6 col-sm-2 col-xs-6">
+      <button type="button" name="button"  id="btn-send-message" class="btn btn-send-message" disabled="disabled">
+        <img class="img-send-msg" width="30px" src="/images/btn-send-msg.svg" alt="" />
+      </button>
+      <button
+        type="button" name="button"  id="btn-send-message"
+        class="btn btn-send-message" disabled="disabled"
+        data-toggle="modal" data-target="#attach-file-popup">
+        <img class="img-send-msg" width="30px" src="/images/btn-attachment.svg" alt="" />
+      </button>
     </div>
   </section>
 </footer>
+<div class="col-xs-12">
+  <!-- Modal popup -->
+  <section id="attach-file-popup" class="modal fade attach-file-popup" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content col-xs-12">
+        <form
+          id="uploadForm"
+          enctype="multipart/form-data"
+          action="/api/photo">
+          <div class="modal-header col-xs-12">
+            <h4 class="modal-title">Browser the file to attach</h4>
+          </div>
+          <div class="modal-body col-xs-12">
+            <input type="file" name="dataFile" id="textbox-attach-file"/>
+            <br>
+            <img id="file-uploaded" class="preview-file-uploaded" src="" style="display:none;" />
+            <div id="no-preview-msg"></div>
+            <br>
+            <p id="invalid-upload" class="error-msg"></p>
+          </div>
+          <div class="modal-footer col-xs-12">
+            <input id="submit-upload-popup" class="btn btn-primary" type="button" value="Upload" name="submit" disabled="disabled" onclick="addUserInURL()">
+            <button id="close-upload-popup" type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            <input type="submit" class="submit-form" id="submit-form"/>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
 {{#if isNewUser}}
 <div class="col-xs-12">
   <!-- Modal popup -->
   <section id="userId-popup" class="modal modal-userId fade" role="dialog">
     <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
+      <div class="modal-content col-xs-12">
+        <div class="modal-header col-xs-12">
           <h4 class="modal-title">Please make a note</h4>
         </div>
         <div class="modal-body col-xs-12">
@@ -48,7 +94,7 @@
           <p>Here's your user id - <strong>{{loggedInUser}}</strong>. Please make a note as you can use it for future login(s).</p><br>
           <small> - Windbag Support Team </small>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer col-xs-12">
           <button type="button" class="btn btn-primary closePopup">Close</button>
         </div>
       </div>
