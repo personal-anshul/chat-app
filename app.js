@@ -5,13 +5,14 @@ var express = require('express'),
   http = require('http'),
   bcrypt = require('bcryptjs'),
   path = require('path'),
-  // mime = require('mime'),
   cookieParser = require('cookie-parser'),
   bodyParser = require('body-parser'),
   multer  =   require('multer'),
-  fs = require('fs'), // required for file serving
+  // required for file serving
+  fs = require('fs'),
   //express initialization
   app = express(),
+  //upload file from local disk to server
   storage = multer.diskStorage({
     destination: function (req, file, callback) {
       callback(null, './uploads');
@@ -82,7 +83,7 @@ ioSocket.use(ioSession);
 app.get('/', routes.index);
 app.get('/logout', routes.logout);
 app.get('/chat', chat.chatMsg);
-//post request to upload data
+//post request to upload data file
 app.post('/api/photo', function(req,res){
   upload(req,res,function(err) {
     if(err) {
@@ -92,13 +93,12 @@ app.post('/api/photo', function(req,res){
     res.redirect("/chat");
   });
 });
+//post request to download data file
 app.get('/download', function(req, res){
   var file = __dirname + "/uploads/";
   if(req.query.id == req.session.user || req.query.name == req.session.user) {
     file = file + req.query.id + "-" + req.query.name + "-" + req.query.span;
   }
-  // var mimetype = mime.lookup(file);
-  // res.setHeader('Content-type', mimetype);
   //provide file name
   var filename = path.basename(file);
   res.setHeader('Content-disposition', 'attachment; filename=file_' + filename.split('-')[2]);
@@ -244,9 +244,6 @@ ioSocket.on('connection', function (socket) {
           }
         });
       }
-      else {
-        // socket.emit('no user', socket.handshake.session.user);
-      }
     }
   });
 
@@ -315,7 +312,7 @@ ioSocket.on('connection', function (socket) {
                     {"toUser": socket.handshake.session.friend, "fromUser": socket.handshake.session.user},
                     {"fromUser": socket.handshake.session.friend, "toUser": socket.handshake.session.user}
                   ]
-                }),
+                }).sort({ createdOn: 1}),
                 stream = null,
                 //chat msg
                 msg  = {
@@ -358,7 +355,6 @@ ioSocket.on('connection', function (socket) {
         }
         else {
           socket.emit('hide spinner');
-          // socket.emit('no user', socket.handshake.session.user);
         }
       }
     });
@@ -375,8 +371,12 @@ ioSocket.on('connection', function (socket) {
         if(socket.handshake.session.user) {
           db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
             if(user) {
-              var collection = db.collection('chat_msg'),
-                stream = collection.find().stream(),
+              var stream = db.collection('chat_msg').find({
+                  $or : [
+                    {"toUser": socket.handshake.session.friend, "fromUser": socket.handshake.session.user},
+                    {"fromUser": socket.handshake.session.friend, "toUser": socket.handshake.session.user}
+                  ]
+                }).sort({ createdOn: 1}).stream(),
                 //chat msg
                 chatMsg  = {
                   content: null,
@@ -403,7 +403,6 @@ ioSocket.on('connection', function (socket) {
         }
         else {
           socket.emit('hide spinner');
-          // socket.emit('no user', socket.handshake.session.user);
         }
       }
     });

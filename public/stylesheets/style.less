@@ -393,6 +393,34 @@ input {
     }
   }
 }
+.file-animation {
+  animation: bounce 0.8s ease-in-out;
+}
+.notify-chat-pending {
+  background: red;
+  border-radius: 100px;
+  color: #fff;
+  display: inline-block;
+  height: auto;
+  margin-right: -6px;
+  padding: 0 5px;
+  position: fixed;
+  right: 10px;
+  top: 5px;
+  width: auto;
+  z-index: 10;
+}
+.chat-pending {
+  background: red;
+  border-radius: 100px;
+  color: #fff;
+  display: inline-block;
+  height: auto;
+  padding: 0 5px;
+  position: relative;
+  width: auto;
+  z-index: 10;
+}
 .beta-panel {
   left: 30%;
   position: absolute;
@@ -421,6 +449,15 @@ input {
   top: 0;
   width: 0;
   z-index: 1000;
+  .close {
+    font-size: 30px;
+    margin-top: -6px;
+  }
+  .span {
+    display: inline-block;
+    margin-right: 10px;
+    margin-top: 3px;
+  }
 }
 .show-file-notification {
   right: 10px !important;
@@ -518,6 +555,11 @@ input {
   .radio-panel .radio-user {
     margin-top: 0;
   }
+  .file-notification {
+    .span {
+      margin-top: 2px;
+    }
+  }
 }
 
 @media screen and (max-width: 767px) {
@@ -573,5 +615,9 @@ input {
     .beta-panel {
       left: 60px;
     }
+  }
+  .notify-chat-pending {
+    left: 3px;
+    right: inherit;
   }
 }

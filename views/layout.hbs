@@ -22,15 +22,18 @@
           {{#if loggedInUser}}
           <div class="col-xs-7 user-detail text-right">
             <h4 class="userId-detail" title={{userName}}({{loggedInUser}})>
-              {{userNameShort}} (<span id="loggedIn-user" data-info="{{loggedInUserInfo}}">{{loggedInUserShort}}</span>) !! 
+              {{userNameShort}} (<span id="loggedIn-user" data-info="{{loggedInUserInfo}}">{{loggedInUserShort}}</span>) !!
               <a href="/logout">logout</a>
             </h4>
+            <span id="pending-chat-count" class="notify-chat-pending">0</span>
             <button id="btn-toggle-user-list" type="button" class="navbar-toggle" data-toggle="collapse" data-target="#user-list">
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
             <div class="file-notification" id="file-received-notification">
+              <button type="button" id="close-notification" class="close">&times;</button>
+              <span class="span"></span>
             </div>
           </div>
           {{/if}}
