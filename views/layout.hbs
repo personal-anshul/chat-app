@@ -21,7 +21,10 @@
           </a>
           {{#if loggedInUser}}
           <div class="col-xs-7 user-detail text-right">
-            <h4 class="userId-detail" title={{userName}}({{loggedInUser}})>{{userNameShort}} (<span id="loggedIn-user" title="{{loggedInUser}}">{{loggedInUserShort}}</span>) !! <a href="/logout">logout</a></h4>
+            <h4 class="userId-detail" title={{userName}}({{loggedInUser}})>
+              {{userNameShort}} (<span id="loggedIn-user" data-info="{{loggedInUserInfo}}">{{loggedInUserShort}}</span>) !! 
+              <a href="/logout">logout</a>
+            </h4>
             <button id="btn-toggle-user-list" type="button" class="navbar-toggle" data-toggle="collapse" data-target="#user-list">
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
