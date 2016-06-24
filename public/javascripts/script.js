@@ -80,6 +80,13 @@ $(window).on('keyup', function (event) {
   }
 });
 
+//load custom scroll bar when user list is opened
+$('#btn-toggle-user-list').on('click', function () {
+  setTimeout(function () {
+    $("#scrollbar-panel").tinyscrollbar();
+  }, 500);
+})
+
 //show/hode login/signup sections as radio button selected
 $('.radio-user').on("change", function () {
   $('.error-msg').html('');
@@ -235,9 +242,15 @@ socket.on('load all users', function (user, pendingChat) {
     $('#nav-user-list').append('<li class="user-list-item" data-info="' + getCode(user.userId) + '" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - ' + statusBar + '<span class="chat-pending">' + pendingChat + '</span></li>');
     pendingChat == 0 ? null : $("li[data-info='" + getCode(user.userId) + "']" + " span.chat-pending").css({ "display": "inline-block"});
   }
-  setTimeout(function () {
-    $("#scrollbar-panel").tinyscrollbar();
-  }, 3000);
+  if(pendingChat) {
+    $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + pendingChat);
+    if($('#pending-chat-count').html() == "0") {
+      $('#pending-chat-count').css({ "display": "none"});
+    }
+    else {
+      $('#pending-chat-count').css({ "display": "inline-block"});
+    }
+  }
 });
 
 //socket handler to if no user to load
@@ -338,7 +351,8 @@ socket.on('update all users', function (user, pendingChat) {
 socket.on('event of chat on server', function (data) {
   if(readCode($('#loggedIn-user').attr('data-info')) == data.toUserId.trim() && readCode($('#chat-with-user-info').attr("data-info")) != data.fromUserId.trim()) {
     if(data.content != null) {
-      $('#file-received-notification span').html(data.fromUserId + " has sent you a new msg.");
+      $('#file-received-notification .span-user').html(data.fromUserId);
+      $('#file-received-notification .span-msg').html(data.content);
       $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + 1);
       $('#pending-chat-count').css({ "display": "inline-block"});
       var element = $("li[data-info='" + getCode(data.fromUserId.trim()) + "']" + " span.chat-pending");
@@ -352,7 +366,6 @@ socket.on('event of chat on server', function (data) {
   }
   if((readCode($('#loggedIn-user').attr('data-info')) == data.toUserId.trim() && readCode($('#chat-with-user-info').attr("data-info")) == data.fromUserId.trim())
     || (readCode($('#chat-with-user-info').attr("data-info")) == data.toUserId.trim() && readCode($('#loggedIn-user').attr('data-info')) == data.fromUserId.trim())) {
-    socket.emit('remove pending chat', data.toUserId.trim(), data.fromUserId.trim());
     if(checkPageStatus()) {
       var chatTime = new Date(data.createdOn).toJSON().split('T');
       if(readCode($('#loggedIn-user').attr('data-info')) == data.fromUserId.trim()) {
@@ -388,7 +401,8 @@ socket.on("notify file received", function(userSent, userReceived, fileType) {
       $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + userSent + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "." + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
     }
     else if(readCode($('#loggedIn-user').attr('data-info')) == userReceived) {
-      $('#file-received-notification span').html(userSent + " has shared a file with you.");
+      $('#file-received-notification .span-user').html(userSent);
+      $('#file-received-notification .span-msg').html('shared a file with you.');
       $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + 1);
       $('#pending-chat-count').css({ "display": "inline-block"});
       var element = $("li[data-info='" + getCode(data.fromUserId.trim()) + "']" + " span.chat-pending");
@@ -401,4 +415,19 @@ socket.on("notify file received", function(userSent, userReceived, fileType) {
     }
   }
   window.scrollTo(0, document.body.scrollHeight);
+});
+
+socket.on('update notification count', function (userTo, userFrom) {
+  if(readCode($('#loggedIn-user').attr('data-info')) == userTo) {
+    var element = $("li[data-info='" + getCode(userFrom) + "']" + " span.chat-pending");
+    $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) - parseInt(element.html()));
+    if($('#pending-chat-count').html() == "0") {
+      $('#pending-chat-count').css({ "display": "none"});
+    }
+    else {
+      $('#pending-chat-count').css({ "display": "inline-block"});
+    }
+    element.html('0');
+    element.css({ "display": "none"});
+  }
 });

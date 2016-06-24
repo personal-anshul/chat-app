@@ -376,7 +376,7 @@ input {
   display: block;
   margin: 0 auto;
   max-height: 260px;
-  max-width: 500px
+  max-width: 95%;
 }
 .file-shared-notification {
   background: #e6d8ff;
@@ -435,15 +435,25 @@ input {
   font-size: 12px;
   padding: 2px 5px;
 }
+.span-user {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: left;
+}
+.span-msg {
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: left;
+}
 .submit-form {
   display: none;
 }
 .file-notification {
-  background: #a5b9bd;
-  border: 1px solid #8222e2;
-  border-radius: 5px;
-  box-shadow: 2px 2px 2px #275773;
-  color: #8c2c2c;
+  background: #e2e2e2;
+  border: 1px solid #000000;
+  border-radius: 2px;
+  box-shadow: 2px 2px 2px #000000;
+  color: #2500dc;
   padding: 10px;
   position: absolute;
   right: -100px;
@@ -461,6 +471,7 @@ input {
   }
 }
 .show-file-notification {
+  min-width: 40vw;
   right: 10px !important;
   width: auto;
   transition: right 0.5s linear;

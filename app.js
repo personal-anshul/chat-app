@@ -223,7 +223,7 @@ ioSocket.on('connection', function (socket) {
                 }
               },
               function(err, success) {
-                var userStream = db.collection('user_info').find();
+                var userStream = db.collection('user_info').find().sort({"userName": 1});
                 userStream.count({}, function (err, c) {
                   if(c == 1) {
                     socket.emit('no user to load');
@@ -274,7 +274,7 @@ ioSocket.on('connection', function (socket) {
             }
           },
           function(err, success) {
-            var userStream = db.collection('user_info').find().stream();
+            var userStream = db.collection('user_info').find().sort({"userName": 1}).stream();
             userStream.on('data', function (user) {
               socket.broadcast.emit('update all users', user);
             });
@@ -349,7 +349,9 @@ ioSocket.on('connection', function (socket) {
                   db.collection('pending_chat').update(
                     { "userTo": socket.handshake.session.user, "userFrom": socket.handshake.session.friend },
                     { $set: { "pendingChat": 0 } },
-                    function(err, success) { }
+                    function(err, success) {
+                      socket.emit('update notification count', socket.handshake.session.user, socket.handshake.session.friend);
+                    }
                   );
                   if(c > 10) {
                     socket.emit('show load all chat link');
@@ -410,7 +412,9 @@ ioSocket.on('connection', function (socket) {
               db.collection('pending_chat').update(
                 { "userTo": socket.handshake.session.user, "userFrom": socket.handshake.session.friend },
                 { $set: { "pendingChat": 0 } },
-                function(err, success) { }
+                function(err, success) {
+                  socket.emit('update notification count', socket.handshake.session.user, socket.handshake.session.friend);
+                }
               );
               socket.emit('hide spinner');
             }
@@ -497,28 +501,6 @@ ioSocket.on('connection', function (socket) {
             });
           }
         });
-      }
-    });
-  });
-
-  //event handler to remove notification count
-  socket.on('remove pending chat', function (userTo, userFrom) {
-    global.MongoClient.connect(global.url, function (err, db) {
-      if(err){
-        console.warn(err.message);
-      }
-      else {
-        var collection = db.collection('pending_chat');
-        collection.update({
-            $or : [
-              {"userTo": userTo, "userFrom": userFrom},
-              {"userTo": userFrom, "userFrom": userTo}
-            ]
-          },
-          { $set: {"pendingChat": 0} },
-          { multi: true },
-          function(err, success) { }
-        );
       }
     });
   });
