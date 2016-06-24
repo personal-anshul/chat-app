@@ -150,6 +150,7 @@ $('#btn-send-message').on("click", function () {
   msg.fromUserId = readCode($('#loggedIn-user').attr('data-info'));
   msg.toUserId = readCode($('#chat-with-user-info').attr("data-info"));
   msg.createdOn = new Date().setMinutes(new Date().getMinutes() + 330).valueOf();
+  socket.emit('pending-chat', msg.toUserId, msg.fromUserId);
   if(msg.content !== "") {
     socket.emit('event of chat on client', msg);
     socket.emit('remove typing userinfo');
@@ -217,6 +218,7 @@ $('#close-upload-popup').on("click", function () {
   }, 200);
 });
 
+//close notification bar
 $("#close-notification").on("click", function () {
   $('#file-received-notification').removeClass('file-animation').removeClass('show-file-notification');
 });
@@ -227,10 +229,11 @@ socket.on('remove users from list', function() {
 });
 
 //socket handler to load all users
-socket.on('load all users', function (user) {
+socket.on('load all users', function (user, pendingChat) {
   if(user.userId != readCode($('#loggedIn-user').attr('data-info'))) {
-    var statusBar = user.isConnected == 1 ? "<span class='user-online'>Online</span>" : "<span class='user-offline'>Offline</span>";
-    $('#nav-user-list').append('<li class="user-list-item" data-info="' + getCode(user.userId) + '" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - ' + statusBar + '<span class="chat-pending">0</span></li>');
+    var statusBar = user.isConnected == 1 ? "<span class='user-status user-online'>Online</span>" : "<span class='user-status user-offline'>Offline</span>";
+    $('#nav-user-list').append('<li class="user-list-item" data-info="' + getCode(user.userId) + '" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - ' + statusBar + '<span class="chat-pending">' + pendingChat + '</span></li>');
+    pendingChat == 0 ? null : $("li[data-info='" + getCode(user.userId) + "']" + " span.chat-pending").css({ "display": "inline-block"});
   }
   setTimeout(function () {
     $("#scrollbar-panel").tinyscrollbar();
@@ -306,10 +309,19 @@ socket.on('update typing userinfo', function (userTyping, typingFor) {
 });
 
 //socket handler to update list of all users to show online/offline status
-socket.on('update all users', function (user) {
+socket.on('update all users', function (user, pendingChat) {
   if(user.userId != readCode($('#loggedIn-user').attr('data-info'))) {
-    var statusBar = user.isConnected == 1 ? '<span class="user-online">Online</span>' : '<span class="user-offline">Offline</span>';
-    $('#nav-user-list').append('<li class="user-list-item" data-info="' + getCode(user.userId) + '" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - ' + statusBar + '<span class="chat-pending">0</span></li>');
+    var statusBar = "";
+      element = $("li[data-info='" + getCode(user.userId) + "']" + " span.user-status");
+    if(user.isConnected == 1) {
+      statusBar = "Online";
+      element.removeClass('user-offline').addClass('user-online');
+    }
+    else {
+      statusBar = "Offline";
+      element.removeClass('user-online').addClass('user-offline');
+    }
+    element.html(statusBar);
   }
   if(user.userId == readCode($('#chat-with-user-info').attr("data-info"))) {
     var lastSeen = new Date(user.lastConnected).toJSON().split('T');
@@ -328,16 +340,19 @@ socket.on('event of chat on server', function (data) {
     if(data.content != null) {
       $('#file-received-notification span').html(data.fromUserId + " has sent you a new msg.");
       $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + 1);
+      $('#pending-chat-count').css({ "display": "inline-block"});
       var element = $("li[data-info='" + getCode(data.fromUserId.trim()) + "']" + " span.chat-pending");
       element.html(parseInt(element.html()) + 1);
+      element.css({ "display": "inline-block"});
       $('#file-received-notification').removeClass('file-animation').addClass('show-file-notification');
       setTimeout(function () {
         $('#file-received-notification').addClass('file-animation');
       }, 600);
     }
   }
-  if((readCode($('#loggedIn-user').attr('data-info')) == data.toUserId.trim() || readCode($('#loggedIn-user').attr('data-info')) == data.fromUserId.trim())
-    && (readCode($('#chat-with-user-info').attr("data-info")) == data.toUserId.trim() || readCode($('#chat-with-user-info').attr("data-info")) == data.fromUserId.trim())) {
+  if((readCode($('#loggedIn-user').attr('data-info')) == data.toUserId.trim() && readCode($('#chat-with-user-info').attr("data-info")) == data.fromUserId.trim())
+    || (readCode($('#chat-with-user-info').attr("data-info")) == data.toUserId.trim() && readCode($('#loggedIn-user').attr('data-info')) == data.fromUserId.trim())) {
+    socket.emit('remove pending chat', data.toUserId.trim(), data.fromUserId.trim());
     if(checkPageStatus()) {
       var chatTime = new Date(data.createdOn).toJSON().split('T');
       if(readCode($('#loggedIn-user').attr('data-info')) == data.fromUserId.trim()) {
@@ -363,6 +378,7 @@ socket.on('event of chat on server', function (data) {
 
 //socket handler to display file received
 socket.on("notify file received", function(userSent, userReceived, fileType) {
+  socket.emit('pending-chat', userReceived, userSent);
   var chatTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).toJSON().split('T');
   if(checkPageStatus()) {
     if(readCode($('#loggedIn-user').attr('data-info')) == userSent && readCode($('#chat-with-user-info').attr("data-info")) == userReceived) {
@@ -374,8 +390,10 @@ socket.on("notify file received", function(userSent, userReceived, fileType) {
     else if(readCode($('#loggedIn-user').attr('data-info')) == userReceived) {
       $('#file-received-notification span').html(userSent + " has shared a file with you.");
       $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + 1);
+      $('#pending-chat-count').css({ "display": "inline-block"});
       var element = $("li[data-info='" + getCode(data.fromUserId.trim()) + "']" + " span.chat-pending");
       element.html(parseInt(element.html()) + 1);
+      element.css({ "display": "inline-block"});
       $('#file-received-notification').removeClass('file-animation').addClass('show-file-notification');
       setTimeout(function () {
         $('#file-received-notification').addClass('file-animation');

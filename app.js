@@ -223,7 +223,6 @@ ioSocket.on('connection', function (socket) {
                 }
               },
               function(err, success) {
-                socket.broadcast.emit('remove users from list');
                 var userStream = db.collection('user_info').find();
                 userStream.count({}, function (err, c) {
                   if(c == 1) {
@@ -231,8 +230,19 @@ ioSocket.on('connection', function (socket) {
                   }
                   else {
                     userStream.stream().on('data', function (user) {
-                      socket.emit('load all users', user);
-                      socket.broadcast.emit('update all users', user);
+                      db.collection('pending_chat').findOne({
+                        "$query": { "userTo": socket.handshake.session.user, "userFrom": user.userId }},
+                        function(err, data) {
+                          if(data) {
+                            socket.emit('load all users', user, data.pendingChat);
+                            socket.broadcast.emit('update all users', user);
+                          }
+                          else {
+                            socket.emit('load all users', user, 0);
+                            socket.broadcast.emit('update all users', user);
+                          }
+                        }
+                      );
                     });
                   }
                 });
@@ -264,7 +274,6 @@ ioSocket.on('connection', function (socket) {
             }
           },
           function(err, success) {
-            socket.broadcast.emit('remove users from list');
             var userStream = db.collection('user_info').find().stream();
             userStream.on('data', function (user) {
               socket.broadcast.emit('update all users', user);
@@ -337,6 +346,11 @@ ioSocket.on('connection', function (socket) {
                     msg.createdOn = chat.createdOn;
                     socket.emit('event of chat on server', msg);
                   });
+                  db.collection('pending_chat').update(
+                    { "userTo": socket.handshake.session.user, "userFrom": socket.handshake.session.friend },
+                    { $set: { "pendingChat": 0 } },
+                    function(err, success) { }
+                  );
                   if(c > 10) {
                     socket.emit('show load all chat link');
                   }
@@ -393,6 +407,11 @@ ioSocket.on('connection', function (socket) {
                 chatMsg.createdOn = chat.createdOn;
                 socket.emit('event of chat on server', chatMsg);
               });
+              db.collection('pending_chat').update(
+                { "userTo": socket.handshake.session.user, "userFrom": socket.handshake.session.friend },
+                { $set: { "pendingChat": 0 } },
+                function(err, success) { }
+              );
               socket.emit('hide spinner');
             }
             else {
@@ -441,6 +460,65 @@ ioSocket.on('connection', function (socket) {
             }
           });
         }
+      }
+    });
+  });
+
+  //event handler to save pending chat notifications
+  socket.on('pending-chat', function (userTo, userFrom) {
+    global.MongoClient.connect(global.url, function (err, db) {
+      if(err){
+        console.warn(err.message);
+      }
+      else {
+        var collection = db.collection('pending_chat');
+        collection.findOne({"$query": { "userTo": userTo, "userFrom": userFrom }}, function(err, data) {
+          if(data) {
+            collection.update(
+              { "userTo": userTo, "userFrom": userFrom },
+              { $set: { "pendingChat": parseInt(data.pendingChat) + 1 } },
+              function(err, success) { }
+            );
+          }
+          else {
+            collection.insert({
+              userTo: userTo,
+              userFrom: userFrom,
+              pendingChat: 1,
+              createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
+            },
+            function (err, o) {
+              if (err) {
+                console.warn(err.message);
+              }
+              else {
+                console.info("Pending Chat count updated to : 1");
+              }
+            });
+          }
+        });
+      }
+    });
+  });
+
+  //event handler to remove notification count
+  socket.on('remove pending chat', function (userTo, userFrom) {
+    global.MongoClient.connect(global.url, function (err, db) {
+      if(err){
+        console.warn(err.message);
+      }
+      else {
+        var collection = db.collection('pending_chat');
+        collection.update({
+            $or : [
+              {"userTo": userTo, "userFrom": userFrom},
+              {"userTo": userFrom, "userFrom": userTo}
+            ]
+          },
+          { $set: {"pendingChat": 0} },
+          { multi: true },
+          function(err, success) { }
+        );
       }
     });
   });
