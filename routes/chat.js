@@ -30,7 +30,6 @@ exports.chatMsg = function(req, res) {
             res.render('chat', {
               title: 'Windbag',
               loggedInUser: user,
-              loggedInUserShort: (user.length > 10 ? user.slice(0,10) + "..." : user),
               loggedInUserInfo: getCode(user),
               userName: req.session.newUser,
               userNameShort: (req.session.newUser.length > 10 ? req.session.newUser.slice(0,10) + "..." : req.session.newUser),

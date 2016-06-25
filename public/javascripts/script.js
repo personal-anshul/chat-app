@@ -35,6 +35,11 @@ function readCode(stringData) {
   return code;
 }
 
+//get user's display image
+function loadDisplayImage() {
+  // $('#user-display-pic').attr("src", "/dp/" + readCode($('#loggedIn-user').attr('data-info')) + "_" + $('#loggedIn-user').attr('data-info'));
+}
+
 //check if user is in proper window to get chat msg and chat have already been initiated
 function checkPageStatus() {
   if($('#messages').html().indexOf('Oops.. There is no chat between you both yet.') != -1) {
@@ -76,6 +81,9 @@ $(window).on('keyup', function (event) {
   if(event.keyCode == 27) {
     if(document.getElementById('user-list').className.indexOf('in') != -1) {
       $('#btn-toggle-user-list').click();
+    }
+    if($('#input-message').val() !== "") {
+      $('#input-message').val('');
     }
   }
 });
@@ -163,7 +171,7 @@ $('#btn-send-message').on("click", function () {
     socket.emit('remove typing userinfo');
     if(checkPageStatus()) {
       var chatTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).toJSON().split('T');
-      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.fromUserId + ": </b>" +  msg.content + "<small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.fromUserId + ": </b><span class='selectable'>" +  msg.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
       $('#input-message').val('');
     }
   }
@@ -373,7 +381,7 @@ socket.on('event of chat on server', function (data) {
           $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + data.toUserId + ". Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUserId + "&name=" + data.toUserId + "&span=" + data.createdOn.toString().slice(0,9) + "." + data.fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
         else {
-          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUserId + ": </b>" + data.content + "<small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUserId + ": </b><span class='selectable'>" + data.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
       }
       else {
@@ -381,7 +389,7 @@ socket.on('event of chat on server', function (data) {
           $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + data.fromUserId + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUserId + "&name=" + data.toUserId + "&span=" + data.createdOn.toString().slice(0,9) + "." + data.fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
         else {
-          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.fromUserId + ": </b>" + data.content + "<small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.fromUserId + ": </b><span class='selectable'>" + data.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
       }
     }

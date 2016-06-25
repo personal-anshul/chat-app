@@ -2,6 +2,10 @@ body {
   background: #edeff5 url("/images/background.jpeg") no-repeat fixed center 70px / contain;
   font: 16px "Jura", Helvetica, Arial, sans-serif;
   transition: all 1s linear;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 canvas {
   background: transparent;
@@ -27,6 +31,12 @@ input {
     -webkit-box-shadow: 0 0 0px 1000px white inset;
     transition: all 0.1s linear;
   }
+}
+.selectable {
+  user-select: initial;
+  -webkit-user-select: initial;
+  -moz-user-select: element;
+  -ms-user-select: initial;
 }
 .header {
   color: #fff;
@@ -148,19 +158,19 @@ input {
   background: #1d1d1d;
   float: none;
   .user-detail {
-    margin: 12px 0 10px;
+    margin: 12px 0 0;
     padding: 0;
   }
   .userId-detail {
     display: inline-block;
-    margin-top: 12px;
-    margin-right: 10px;
+    margin: 2px 15px 0 2px;
   }
 }
 .navbar-brand {
   height: auto;
 }
 .navbar-toggle {
+  border-color: #5D4764 !important;
   display: block;
   margin-top: 5px;
 }
@@ -186,6 +196,7 @@ input {
 .navbar-inverse .navbar-nav > li > a:focus {
   background-color: #333 !important;
 }
+.navbar-inverse .navbar-toggle
 .no-margin {
   margin: 0;
 }
@@ -335,6 +346,11 @@ input {
   display: inline-block;
   width: 210%;
 }
+.btn-display-picture {
+  background: transparent;
+  border: 0 none;
+  padding-right: 0;
+}
 .display-picture {
   border: 1px solid #a9cce3;
   border-radius: 20px;
@@ -347,6 +363,14 @@ input {
   display: inline-block;
   height: 25px;
   width: 25px;
+  margin-right: 5px;
+}
+.user-display-pic {
+  border: 1px solid #555;
+  border-radius: 20px;
+  display: inline-block;
+  height: 40px;
+  width: 40px;
   margin-right: 5px;
 }
 .chat-with-user {
@@ -397,9 +421,9 @@ input {
   animation: bounce 0.8s ease-in-out;
 }
 .notify-chat-pending {
-  background: red;
+  background: #a9cce3;
   border-radius: 100px;
-  color: #fff;
+  color: #333;
   display: none;
   height: auto;
   margin-right: -6px;
@@ -411,9 +435,9 @@ input {
   z-index: 10;
 }
 .chat-pending {
-  background: red;
+  background: #eac9f4;
   border-radius: 100px;
-  color: #fff;
+  color: #5D4764;
   display: none;
   height: auto;
   margin-left: 10px;
@@ -438,6 +462,7 @@ input {
 .span-user {
   font-size: 18px;
   font-weight: bold;
+  margin-right: 30px;
   text-align: left;
 }
 .span-msg {
@@ -463,6 +488,10 @@ input {
   .close {
     font-size: 30px;
     margin-top: -6px;
+    padding: 0 6px;
+    &:hover {
+      animation: spin 0.5s ease-in-out;
+    }
   }
   .span {
     display: inline-block;
@@ -475,6 +504,24 @@ input {
   right: 10px !important;
   width: auto;
   transition: right 0.5s linear;
+}
+.navbar-toggle {
+  height: 44px;
+  margin-top: 0;
+  padding: 5px;
+  transform: rotate(90deg);
+  width: 34px;
+  & .icon-bar + .icon-bar {
+    margin-top: 7px;
+  }
+}
+.icon-bar {
+  margin-top: 0;
+}
+.pipe {
+  display: inline-block;
+  margin: 0 5px;
+  transform: scale(2);
 }
 /* Custom Scrollbar */
 .scrollbar-panel {

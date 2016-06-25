@@ -22,7 +22,14 @@
           {{#if loggedInUser}}
           <div class="col-xs-7 user-detail text-right">
             <h4 class="userId-detail" title={{userName}}({{loggedInUser}})>
-              {{userNameShort}} (<span id="loggedIn-user" data-info="{{loggedInUserInfo}}">{{loggedInUserShort}}</span>) !!
+              <span id="loggedIn-user" data-info="{{loggedInUserInfo}}">
+                <button type="button" name="button" class="btn-display-picture"
+                  data-toggle="modal" data-target="#attach-display-img">
+                  <img src="/dp/no-user.png" alt="dp" class="user-display-pic" id="user-display-pic"/>
+                </button>
+              </span>
+              {{userNameShort}}
+              <span class="pipe"> | </span>
               <a href="/logout">logout</a>
             </h4>
             <span id="pending-chat-count" class="notify-chat-pending">0</span>
@@ -54,6 +61,36 @@
     {{{body}}}
   </body>
 </html>
+<div class="col-xs-12">
+  <!-- Modal popup -->
+  <section id="attach-display-img" class="modal fade attach-file-popup" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content col-xs-12">
+        <form
+          id="uploadDp"
+          enctype="multipart/form-data"
+          action="/api/dp">
+          <div class="modal-header col-xs-12">
+            <h4 class="modal-title">Tell us, how u look</h4>
+          </div>
+          <div class="modal-body col-xs-12">
+            <input type="file" name="dataFile" id="textbox-attach-file"/>
+            <br>
+            <img id="file-uploaded" class="preview-file-uploaded" src="" style="display:none;" />
+            <div id="no-preview-msg"></div>
+            <br>
+            <p id="invalid-upload" class="error-msg"></p>
+          </div>
+          <div class="modal-footer col-xs-12">
+            <input id="submit-upload-popup" class="btn btn-primary" type="button" value="Upload" name="submit" disabled="disabled" onclick="return false">
+            <button id="close-upload-popup" type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            <input type="submit" class="submit-form" id="submit-form-dp"/>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
 <script type="text/javascript" src='/library/bootstrap/dist/js/bootstrap.min.js'></script>
 <script type="text/javascript" src='/socket.io/socket.io.js'></script>
 <script type="text/javascript" src="/javascripts/script.js"></script>
