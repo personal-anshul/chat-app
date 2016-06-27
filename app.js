@@ -19,11 +19,21 @@ var express = require('express'),
     },
     filename: function (req, file, callback) {
       var fileExtension = file.originalname.split('.'),
-        fileName = req.session.user + '-' + req.query.id + '-' + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9);
+        fileName = req.session.user + "-" + req.query.id + "-" + req.query.span;
       callback(null, fileName + "." + fileExtension[fileExtension.length - 1]);
     }
   }),
   upload = multer({ storage : storage}).single('dataFile');
+  storageDp = multer.diskStorage({
+    destination: function (req, file, callback) {
+      callback(null, './public/dp');
+    },
+    filename: function (req, file, callback) {
+      var fileName = req.session.user + "-" + getCode(req.session.user) + "-" + req.query.span;
+      callback(null, fileName);
+    }
+  }),
+  uploadDP = multer({ storage : storageDp}).single('dataFile');
 
 /*Global variable*/
 global.errorMessage = null;
@@ -39,6 +49,18 @@ function isValid(value) {
   else {
     return true;
   }
+}
+
+//encryption
+global.getCode = function(stringData) {
+  var series = "1325849170636298",
+    alphabets = "qwertyuiopasdfghjklzxcvbnm_1234567890!@#%^&*",
+    code = "", temp;
+  for(i = 0; i < stringData.length; i++) {
+    temp = alphabets[parseInt(alphabets.indexOf(stringData[i])) + parseInt(series[i])];
+    code = code + (temp == undefined ? "$" + stringData[i] : temp);
+  }
+  return code;
 }
 
 // initializing express-session middleware
@@ -93,11 +115,21 @@ app.post('/api/photo', function(req,res){
     res.redirect("/chat");
   });
 });
+//post request to upload data file
+app.post('/api/dp', function(req,res){
+  uploadDP(req,res,function(err) {
+    if(err) {
+      return res.end("Error uploading dp.");
+    }
+    //TODO: do not reload the page
+    res.redirect("/chat");
+  });
+});
 //post request to download data file
 app.get('/download', function(req, res){
   var file = __dirname + "/uploads/";
   if(req.query.id == req.session.user || req.query.name == req.session.user) {
-    file = file + req.query.id + "-" + req.query.name + "-" + req.query.span;
+    file = file + req.query.id + "-" + req.query.name + "-" + req.query.span + "." + req.query.type;
   }
   //provide file name
   var filename = path.basename(file);
@@ -119,7 +151,7 @@ app.post('/', function (req, res) {
   users.name = isValid(req.body.userName) ? req.body.userName.toLowerCase() : undefined;
   global.MongoClient.connect(global.url, function (err, db) {
     if(err){
-      console.warn(err.message);
+      socket.emit('connection closed');
     }
     else {
       var collection = db.collection('user_info');
@@ -135,11 +167,11 @@ app.post('/', function (req, res) {
             password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
             isConnected: 1,
             lastConnected: new Date().setMinutes(new Date().getMinutes() + 330).valueOf(),
+            dpName: null,
             createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
           },
           function (err, o) {
             if (err) {
-              console.warn(err.message);
               if (err.code === 11000) {
                 global.errorMessage = 'Email already exists, please login with the same.';
                 res.redirect('/');
@@ -207,7 +239,7 @@ ioSocket.on('connection', function (socket) {
   //event handler to load chat on connection
   global.MongoClient.connect(global.url, function (err, db) {
     if(err){
-      console.warn(err.message);
+      socket.emit('connection closed');
     }
     else {
       if(socket.handshake.session.user) {
@@ -230,6 +262,9 @@ ioSocket.on('connection', function (socket) {
                   }
                   else {
                     userStream.stream().on('data', function (user) {
+                      if(socket.handshake.session.user == user.userId) {
+                        socket.emit('load display image', user.dpName);
+                      }
                       db.collection('pending_chat').findOne({
                         "$query": { "userTo": socket.handshake.session.user, "userFrom": user.userId }},
                         function(err, data) {
@@ -250,9 +285,14 @@ ioSocket.on('connection', function (socket) {
             );
           }
           else {
-            socket.handshake.session.user = null;
+            socket.emit('user session is expired', socket.handshake.session.user);
+            delete socket.handshake.session.user;
           }
         });
+      }
+      else {
+        socket.emit('user session is expired', socket.handshake.session.user);
+        delete socket.handshake.session.user;
       }
     }
   });
@@ -262,7 +302,7 @@ ioSocket.on('connection', function (socket) {
     global.errorMessage = "";
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
-        console.warn(err.message);
+        socket.emit('connection closed');
       }
       else {
         db.collection('user_info').update(
@@ -296,19 +336,20 @@ ioSocket.on('connection', function (socket) {
   socket.on('remove typing userinfo', function () {
     var userTypingFor = socket.handshake.session.friend;
     socket.broadcast.emit('update typing userinfo', null, userTypingFor);
-  })
+  });
 
   //event handler to load chat messages related to selected user
   socket.on('load related chat', function (friendUserId) {
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
         socket.emit('hide spinner');
-        console.warn(err.message);
+        socket.emit('connection closed');
       }
       else {
         if(socket.handshake.session.user) {
           db.collection('user_info').findOne({"$query": {"_id": friendUserId}}, function(err, user) {
             if(user) {
+              socket.emit('load dp', user.dpName, user.userId);
               socket.handshake.session.friend = user.userId;
               var lastSeen = new Date(user.lastConnected).toJSON().split('T');
               var localDate = new Date().setMinutes(new Date().getMinutes() + 330);
@@ -322,29 +363,22 @@ ioSocket.on('connection', function (socket) {
                     {"fromUser": socket.handshake.session.friend, "toUser": socket.handshake.session.user}
                   ]
                 }).sort({ createdOn: 1}),
-                stream = null,
-                //chat msg
-                msg  = {
-                  content: null,
-                  toUserId: null,
-                  fromUserId: null,
-                  createdOn: null,
-                  fileType: null
-                };
+                stream = null;
               cursor.count({}, function(err, c) {
                 if(c == 0) {
                   socket.emit('no chat to load');
                   socket.emit('hide load all chat link');
                 }
                 else {
+                  if(c > 10) {
+                    socket.emit('show load all chat link');
+                  }
+                  else {
+                    socket.emit('hide load all chat link');
+                  }
                   stream = c < 10 ? cursor.stream() : cursor.skip(c-10).limit(10).stream();
                   stream.on('data', function (chat) {
-                    msg.content = chat.content;
-                    msg.toUserId = chat.toUser;
-                    msg.fromUserId = chat.fromUser;
-                    msg.fileType = chat.fileType;
-                    msg.createdOn = chat.createdOn;
-                    socket.emit('event of chat on server', msg);
+                    socket.emit('event of chat on server', chat);
                   });
                   db.collection('pending_chat').update(
                     { "userTo": socket.handshake.session.user, "userFrom": socket.handshake.session.friend },
@@ -353,24 +387,19 @@ ioSocket.on('connection', function (socket) {
                       socket.emit('update notification count', socket.handshake.session.user, socket.handshake.session.friend);
                     }
                   );
-                  if(c > 10) {
-                    socket.emit('show load all chat link');
-                  }
-                  else {
-                    socket.emit('hide load all chat link');
-                  }
                 }
               });
               socket.emit('hide spinner');
             }
             else {
-              socket.emit('hide spinner');
-              socket.handshake.session.user = null;
+              socket.emit('user session is expired', socket.handshake.session.user);
+              delete socket.handshake.session.user;
             }
           });
         }
         else {
-          socket.emit('hide spinner');
+          socket.emit('user session is expired', socket.handshake.session.user);
+          delete socket.handshake.session.user;
         }
       }
     });
@@ -381,7 +410,7 @@ ioSocket.on('connection', function (socket) {
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
         socket.emit('hide spinner');
-        console.warn(err.message);
+        socket.emit('connection closed');
       }
       else {
         if(socket.handshake.session.user) {
@@ -392,22 +421,9 @@ ioSocket.on('connection', function (socket) {
                     {"toUser": socket.handshake.session.friend, "fromUser": socket.handshake.session.user},
                     {"fromUser": socket.handshake.session.friend, "toUser": socket.handshake.session.user}
                   ]
-                }).sort({ createdOn: 1}).stream(),
-                //chat msg
-                chatMsg  = {
-                  content: null,
-                  toUserId: null,
-                  fromUserId: null,
-                  fileType: null,
-                  createdOn: null
-                };
+                }).sort({ createdOn: 1}).stream();
               stream.on('data', function (chat) {
-                chatMsg.content = chat.content;
-                chatMsg.toUserId = chat.toUser;
-                chatMsg.fromUserId = chat.fromUser;
-                chatMsg.fileType = chat.fileType;
-                chatMsg.createdOn = chat.createdOn;
-                socket.emit('event of chat on server', chatMsg);
+                socket.emit('event of chat on server', chat);
               });
               db.collection('pending_chat').update(
                 { "userTo": socket.handshake.session.user, "userFrom": socket.handshake.session.friend },
@@ -419,13 +435,14 @@ ioSocket.on('connection', function (socket) {
               socket.emit('hide spinner');
             }
             else {
-              socket.handshake.session.user = null;
-              socket.emit('hide spinner');
+              socket.emit('user session is expired', socket.handshake.session.user);
+              delete socket.handshake.session.user;
             }
           });
         }
         else {
-          socket.emit('hide spinner');
+          socket.emit('user session is expired', socket.handshake.session.user);
+          delete socket.handshake.session.user;
         }
       }
     });
@@ -435,7 +452,7 @@ ioSocket.on('connection', function (socket) {
   socket.on('event of chat on client', function (message) {
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
-        console.warn(err.message);
+        socket.emit('connection closed');
       }
       else {
         if(socket.handshake.session.user && socket.handshake.session.friend) {
@@ -460,9 +477,14 @@ ioSocket.on('connection', function (socket) {
               });
             }
             else {
-              socket.handshake.session.user = null;
+              socket.emit('user session is expired', socket.handshake.session.user);
+              delete socket.handshake.session.user;
             }
           });
+        }
+        else {
+          socket.emit('user session is expired', socket.handshake.session.user);
+          delete socket.handshake.session.user;
         }
       }
     });
@@ -472,7 +494,7 @@ ioSocket.on('connection', function (socket) {
   socket.on('pending-chat', function (userTo, userFrom) {
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
-        console.warn(err.message);
+        socket.emit('connection closed');
       }
       else {
         var collection = db.collection('pending_chat');
@@ -505,13 +527,46 @@ ioSocket.on('connection', function (socket) {
     });
   });
 
+  //update DP of friend
+  socket.on('update dp', function (currentDateTime) {
+    if(socket.handshake.session.user) {
+      global.MongoClient.connect(global.url, function (err, db) {
+        if(err){
+          socket.emit('connection closed');
+        }
+        else {
+          var collection = db.collection('user_info'),
+            dpName = socket.handshake.session.user + "-" + getCode(socket.handshake.session.user) + "-" + currentDateTime;
+          collection.findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
+            if(user) {
+              collection.update(
+                { "userId": socket.handshake.session.user },
+                { $set: { "dpName": dpName} },
+                function(err, success) {
+                  collection.find().stream().on('data', function (user) {
+                    socket.broadcast.emit('update dp of user list', user);
+                  });
+                }
+              );
+              socket.broadcast.emit('dp changed', dpName, socket.handshake.session.user);
+            }
+            else {
+              socket.emit('user session is expired', socket.handshake.session.user);
+              delete socket.handshake.session.user;
+            }
+          });
+        }
+      });
+    }
+  });
+
   //event handler for file received
-  socket.on('file received', function (fileType) {
+  socket.on('file received', function (fileType, currentDateTime) {
     var userSent = socket.handshake.session.user,
       userReceived = socket.handshake.session.friend;
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
-        console.warn(err.message);
+        socket.emit('connection closed');
       }
       else {
         if(userSent && userReceived) {
@@ -523,7 +578,7 @@ ioSocket.on('connection', function (socket) {
                 fromUser: userSent,
                 toUser: userReceived,
                 fileType: fileType,
-                createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
+                createdOn: currentDateTime
                },
                function (err, o) {
                 if (err) {
@@ -531,14 +586,19 @@ ioSocket.on('connection', function (socket) {
                 }
                 else {
                   console.info("file received, entry inserted into db.");
-                  socket.broadcast.emit('notify file received', userSent, userReceived, fileType);
+                  socket.broadcast.emit('notify file received', userSent, userReceived, fileType, currentDateTime);
                 }
               });
             }
             else {
-              socket.handshake.session.user = null;
+              socket.emit('user session is expired', socket.handshake.session.user);
+              delete socket.handshake.session.user;
             }
           });
+        }
+        else {
+          socket.emit('user session is expired', socket.handshake.session.user);
+          delete socket.handshake.session.user;
         }
       }
     });

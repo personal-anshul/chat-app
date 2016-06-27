@@ -1,7 +1,13 @@
 <section class="col-xs-12 section-greeting">
   <h3 class="col-md-10 col-xs-12 greeting-user-panel">
     <div class="col-sm-6 col-xs-12">
-      <img class="display-picture" src="/images/no-user.png" alt="user" />
+      <span id="container-display-picture">
+        <button type="button" name="button"
+          id="btn-friend-display-picture" class="btn-display-picture btn-friend-display-picture"
+          data-toggle="modal" data-target="#attach-friend-display-img">
+          <img class="display-picture" id="friend-display-picture" src="" onerror="this.src='/images/no-user.png'" alt="" />
+        </button>
+      </span>
       <span id="chat-with-user-info" class="chat-with-user" data-info="">
         <span class="hidden-xs">Welcome to </span>{{title}}<sup>&reg;</sup>
       </span>
@@ -33,6 +39,7 @@
         class="input-message form-control col-xs-12"
         rows="3" cols="30"
         disabled="disabled"
+        maxlength="150"
         placeholder="write your message here...">
       </textarea>
     </div>
@@ -79,6 +86,23 @@
     </div>
   </section>
 </div>
+<div class="col-xs-12">
+  <!-- Modal popup -->
+  <section id="attach-friend-display-img" class="modal fade popup-attach-friend-dp" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content col-xs-12">
+        <div class="modal-body col-xs-12">
+          <br>
+          <img id="friend-dp-preview" class="preview-dp" src="" onerror="this.src='/images/no-user.png'"/>
+          <br>
+        </div>
+        <div class="modal-footer col-xs-12">
+          <button id="close-upload-dp" type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
 {{#if isNewUser}}
 <div class="col-xs-12">
   <!-- Modal popup -->
@@ -105,6 +129,5 @@
 <script>
   $(document).ready(function(){
     $('#userId-popup').modal('show');
-    loadDisplayImage();
   });
 </script>

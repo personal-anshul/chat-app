@@ -35,11 +35,6 @@ function readCode(stringData) {
   return code;
 }
 
-//get user's display image
-function loadDisplayImage() {
-  // $('#user-display-pic').attr("src", "/dp/" + readCode($('#loggedIn-user').attr('data-info')) + "_" + $('#loggedIn-user').attr('data-info'));
-}
-
 //check if user is in proper window to get chat msg and chat have already been initiated
 function checkPageStatus() {
   if($('#messages').html().indexOf('Oops.. There is no chat between you both yet.') != -1) {
@@ -56,11 +51,12 @@ function checkPageStatus() {
 //change post request to add user detail
 function addUserInURL(e) {
   if(document.getElementById('textbox-attach-file').value) {
-    var fileType = document.getElementById('textbox-attach-file').value.split('.');
+    var fileType = document.getElementById('textbox-attach-file').value.split('.'),
+      currentDateTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf();
     if(fileType.length == 2) {
       document.getElementById("uploadForm").method = "post";
-      document.getElementById("uploadForm").action = "/api/photo?id=" + readCode($('#chat-with-user-info').attr("data-info"));
-      socket.emit('file received', fileType[1]);
+      document.getElementById("uploadForm").action = "/api/photo?id=" + readCode($('#chat-with-user-info').attr("data-info")) + "&span=" + currentDateTime;
+      socket.emit('file received', fileType[1], currentDateTime);
       setTimeout(function() {
         $('#submit-form').click();
       }, 100);
@@ -75,6 +71,34 @@ function addUserInURL(e) {
     return false;
   }
 }
+
+//update dp
+function uploadDisplayImage() {
+  if(document.getElementById('input-attach-dp').value) {
+    var fileType = document.getElementById('input-attach-dp').value.split('.'),
+      currentDateTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf();
+    if(fileType.length == 2) {
+      document.getElementById("uploadDp").action = "/api/dp?span=" + currentDateTime;
+      socket.emit('update dp', currentDateTime);
+      setTimeout(function() {
+        $('#submit-dp-form').click();
+      }, 100);
+      return true;
+    }
+    else {
+      $('#invalid-dp').html("<p>Provide a valid file name. File name should not have period(.) in it and should have proper file extension, it's mandatory. (Ex: my_dp.png)</p>");
+      return false;
+    }
+  }
+  else {
+    return false;
+  }
+}
+
+//Suppress browser's default right click menu
+$('html').on('contextmenu', function(){
+  return false;
+});
 
 //hide/close user list when ESC is pressed
 $(window).on('keyup', function (event) {
@@ -157,21 +181,21 @@ $('#nav-user-list').delegate('li', 'click', function(elm) {
 $('#btn-send-message').on("click", function () {
   var msg  = {
     content: null,
-    toUserId: null,
-    fromUserId: null,
+    toUser: null,
+    fromUser: null,
     createdOn: null
   };
-  msg.content = $('#input-message').val();
-  msg.fromUserId = readCode($('#loggedIn-user').attr('data-info'));
-  msg.toUserId = readCode($('#chat-with-user-info').attr("data-info"));
+  msg.content = $('#input-message').val().trim().slice(0, 150);
+  msg.fromUser = readCode($('#loggedIn-user').attr('data-info'));
+  msg.toUser = readCode($('#chat-with-user-info').attr("data-info"));
   msg.createdOn = new Date().setMinutes(new Date().getMinutes() + 330).valueOf();
-  socket.emit('pending-chat', msg.toUserId, msg.fromUserId);
+  socket.emit('pending-chat', msg.toUser, msg.fromUser);
   if(msg.content !== "") {
     socket.emit('event of chat on client', msg);
     socket.emit('remove typing userinfo');
     if(checkPageStatus()) {
       var chatTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).toJSON().split('T');
-      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.fromUserId + ": </b><span class='selectable'>" +  msg.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.fromUser + ": </b><span class='selectable'>" +  msg.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
       $('#input-message').val('');
     }
   }
@@ -209,6 +233,40 @@ $('.load-chat a').on("click", function () {
   socket.emit('event of load more chats');
 });
 
+//get the current display img
+$('#btn-display-picture').on("click", function(event) {
+  $("#dp-preview").fadeIn("fast").attr("src", "/dp/" + $('#user-display-pic').attr('data-info'));
+});
+
+//get the friend's display img
+$('#btn-friend-display-picture').on("click", function(event) {
+  $("#friend-dp-preview").fadeIn("fast").attr("src", "/dp/" + $('#friend-display-picture').attr('data-info'));
+});
+
+//read the dp attached
+$('#input-attach-dp').on("change", function(event) {
+  var tmppath = URL.createObjectURL(event.target.files[0]);
+  if(event.target.files[0].type.indexOf('image/') == 0) {
+    $("#dp-preview").fadeIn("fast").attr('src', URL.createObjectURL(event.target.files[0]));
+    $('#submit-upload-dp').removeAttr("disabled");
+    $("#invalid-dp").html("<p>Voila!! This is how you will look. Nice dp.</p>").removeClass("error-msg");
+  }
+  else {
+    $("#invalid-dp").html("<em>Ouch!! It's not a valid image.</em>").addClass("error-msg");
+    $('#submit-upload-dp').attr("disabled", "disabled");
+  }
+});
+
+//remove all details whiling closing the upload popup
+$('#close-upload-dp').on("click", function () {
+  setTimeout(function() {
+    $("#dp-preview").fadeOut("fast").attr('src', "");
+    $('#submit-upload-dp').attr("disabled", "disabled");
+    $('#invalid-dp').html("");
+    document.getElementById('input-attach-dp').value = "";
+  }, 200);
+});
+
 //read the file attached
 $('#textbox-attach-file').on("change", function(event) {
   var tmppath = URL.createObjectURL(event.target.files[0]);
@@ -244,11 +302,12 @@ socket.on('remove users from list', function() {
 });
 
 //socket handler to load all users
-socket.on('load all users', function (user, pendingChat) {
-  if(user.userId != readCode($('#loggedIn-user').attr('data-info'))) {
-    var statusBar = user.isConnected == 1 ? "<span class='user-status user-online'>Online</span>" : "<span class='user-status user-offline'>Offline</span>";
-    $('#nav-user-list').append('<li class="user-list-item" data-info="' + getCode(user.userId) + '" data-value="'+ user._id +'"><img class="thumbnail-dp" src="/images/no-user.png" alt="user" />' + user.userId + ' (' + user.email + ') - ' + statusBar + '<span class="chat-pending">' + pendingChat + '</span></li>');
-    pendingChat == 0 ? null : $("li[data-info='" + getCode(user.userId) + "']" + " span.chat-pending").css({ "display": "inline-block"});
+socket.on('load all users', function (data, pendingChat) {
+  var defaultImg = "onerror='this.src=\"/images/no-user.png\"'";
+  if(data.userId != readCode($('#loggedIn-user').attr('data-info'))) {
+    var statusBar = data.isConnected == 1 ? "<span class='user-status user-online'>Online</span>" : "<span class='user-status user-offline'>Offline</span>";
+    $('#nav-user-list').append('<li class="user-list-item" data-info="' + getCode(data.userId) + '" data-value="'+ data._id +'"><img class="user-display-pic" src="/dp/' + data.dpName + '" alt="user"' + defaultImg + '/>' + data.userId + ' (' + data.email + ') - ' + statusBar + '<span class="chat-pending">' + pendingChat + '</span></li>');
+    pendingChat == 0 ? null : $("li[data-info='" + getCode(data.userId) + "']" + " span.chat-pending").css({ "display": "inline-block"});
   }
   if(pendingChat) {
     $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + pendingChat);
@@ -330,11 +389,11 @@ socket.on('update typing userinfo', function (userTyping, typingFor) {
 });
 
 //socket handler to update list of all users to show online/offline status
-socket.on('update all users', function (user, pendingChat) {
-  if(user.userId != readCode($('#loggedIn-user').attr('data-info'))) {
+socket.on('update all users', function (data, pendingChat) {
+  if(data.userId != readCode($('#loggedIn-user').attr('data-info'))) {
     var statusBar = "";
-      element = $("li[data-info='" + getCode(user.userId) + "']" + " span.user-status");
-    if(user.isConnected == 1) {
+      element = $("li[data-info='" + getCode(data.userId) + "']" + " span.user-status");
+    if(data.isConnected == 1) {
       statusBar = "Online";
       element.removeClass('user-offline').addClass('user-online');
     }
@@ -344,9 +403,9 @@ socket.on('update all users', function (user, pendingChat) {
     }
     element.html(statusBar);
   }
-  if(user.userId == readCode($('#chat-with-user-info').attr("data-info"))) {
-    var lastSeen = new Date(user.lastConnected).toJSON().split('T');
-    if(user.isConnected == 1) {
+  if(data.userId == readCode($('#chat-with-user-info').attr("data-info"))) {
+    var lastSeen = new Date(data.lastConnected).toJSON().split('T');
+    if(data.isConnected == 1) {
       $('.user-last-seen').html('Online');
     }
     else {
@@ -357,13 +416,14 @@ socket.on('update all users', function (user, pendingChat) {
 
 //socket handler to load chats
 socket.on('event of chat on server', function (data) {
-  if(readCode($('#loggedIn-user').attr('data-info')) == data.toUserId.trim() && readCode($('#chat-with-user-info').attr("data-info")) != data.fromUserId.trim()) {
+  if(readCode($('#loggedIn-user').attr('data-info')) == data.toUser.trim() && readCode($('#chat-with-user-info').attr("data-info")) != data.fromUser.trim()) {
     if(data.content != null) {
-      $('#file-received-notification .span-user').html(data.fromUserId);
+      $('#file-received-notification .span-user').html(data.fromUser);
       $('#file-received-notification .span-msg').html(data.content);
       $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + 1);
       $('#pending-chat-count').css({ "display": "inline-block"});
-      var element = $("li[data-info='" + getCode(data.fromUserId.trim()) + "']" + " span.chat-pending");
+      document.getElementById('audio-notification').play();
+      var element = $("li[data-info='" + getCode(data.fromUser.trim()) + "']" + " span.chat-pending");
       element.html(parseInt(element.html()) + 1);
       element.css({ "display": "inline-block"});
       $('#file-received-notification').removeClass('file-animation').addClass('show-file-notification');
@@ -372,24 +432,24 @@ socket.on('event of chat on server', function (data) {
       }, 600);
     }
   }
-  if((readCode($('#loggedIn-user').attr('data-info')) == data.toUserId.trim() && readCode($('#chat-with-user-info').attr("data-info")) == data.fromUserId.trim())
-    || (readCode($('#chat-with-user-info').attr("data-info")) == data.toUserId.trim() && readCode($('#loggedIn-user').attr('data-info')) == data.fromUserId.trim())) {
+  if((readCode($('#loggedIn-user').attr('data-info')) == data.toUser.trim() && readCode($('#chat-with-user-info').attr("data-info")) == data.fromUser.trim())
+    || (readCode($('#chat-with-user-info').attr("data-info")) == data.toUser.trim() && readCode($('#loggedIn-user').attr('data-info')) == data.fromUser.trim())) {
     if(checkPageStatus()) {
       var chatTime = new Date(data.createdOn).toJSON().split('T');
-      if(readCode($('#loggedIn-user').attr('data-info')) == data.fromUserId.trim()) {
+      if(readCode($('#loggedIn-user').attr('data-info')) == data.fromUser.trim()) {
         if(data.content == null) {
-          $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + data.toUserId + ". Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUserId + "&name=" + data.toUserId + "&span=" + data.createdOn.toString().slice(0,9) + "." + data.fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+          $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + data.toUser + ". Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUser + "&name=" + data.toUser + "&span=" + data.createdOn + "&type=" + data.fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
         else {
-          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUserId + ": </b><span class='selectable'>" + data.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUser + ": </b><span class='selectable'>" + data.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
       }
       else {
         if(data.content == null) {
-          $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + data.fromUserId + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUserId + "&name=" + data.toUserId + "&span=" + data.createdOn.toString().slice(0,9) + "." + data.fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+          $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + data.fromUser + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUser + "&name=" + data.toUser + "&span=" + data.createdOn + "&type=" + data.fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
         else {
-          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.fromUserId + ": </b><span class='selectable'>" + data.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.fromUser + ": </b><span class='selectable'>" + data.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
       }
     }
@@ -398,33 +458,35 @@ socket.on('event of chat on server', function (data) {
 });
 
 //socket handler to display file received
-socket.on("notify file received", function(userSent, userReceived, fileType) {
+socket.on("notify file received", function(userSent, userReceived, fileType, currentDateTime) {
   socket.emit('pending-chat', userReceived, userSent);
   var chatTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).toJSON().split('T');
+  if(readCode($('#loggedIn-user').attr('data-info')) == userReceived && readCode($('#chat-with-user-info').attr("data-info")) != userSent) {
+    $('#file-received-notification .span-user').html(userSent);
+    $('#file-received-notification .span-msg').html('shared a file with you.');
+    document.getElementById('audio-notification').play();
+    $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + 1);
+    $('#pending-chat-count').css({ "display": "inline-block"});
+    var element = $("li[data-info='" + getCode(userSent) + "']" + " span.chat-pending");
+    element.html(parseInt(element.html()) + 1);
+    element.css({ "display": "inline-block"});
+    $('#file-received-notification').removeClass('file-animation').addClass('show-file-notification');
+    setTimeout(function () {
+      $('#file-received-notification').addClass('file-animation');
+    }, 600);
+  }
   if(checkPageStatus()) {
     if(readCode($('#loggedIn-user').attr('data-info')) == userSent && readCode($('#chat-with-user-info').attr("data-info")) == userReceived) {
-      $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + userReceived + ". Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "." + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+      $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + userReceived + ". Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + currentDateTime + "&type=" + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
     }
     else if(readCode($('#loggedIn-user').attr('data-info')) == userReceived && readCode($('#chat-with-user-info').attr("data-info")) == userSent) {
-      $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + userSent + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf().toString().slice(0,9) + "." + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
-    }
-    else if(readCode($('#loggedIn-user').attr('data-info')) == userReceived) {
-      $('#file-received-notification .span-user').html(userSent);
-      $('#file-received-notification .span-msg').html('shared a file with you.');
-      $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + 1);
-      $('#pending-chat-count').css({ "display": "inline-block"});
-      var element = $("li[data-info='" + getCode(data.fromUserId.trim()) + "']" + " span.chat-pending");
-      element.html(parseInt(element.html()) + 1);
-      element.css({ "display": "inline-block"});
-      $('#file-received-notification').removeClass('file-animation').addClass('show-file-notification');
-      setTimeout(function () {
-        $('#file-received-notification').addClass('file-animation');
-      }, 600);
+      $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + userSent + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + currentDateTime + "&type=" + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
     }
   }
   window.scrollTo(0, document.body.scrollHeight);
 });
 
+//update notification count if new chat comes
 socket.on('update notification count', function (userTo, userFrom) {
   if(readCode($('#loggedIn-user').attr('data-info')) == userTo) {
     var element = $("li[data-info='" + getCode(userFrom) + "']" + " span.chat-pending");
@@ -437,5 +499,46 @@ socket.on('update notification count', function (userTo, userFrom) {
     }
     element.html('0');
     element.css({ "display": "none"});
+  }
+});
+
+//get current user's display image
+socket.on('load display image', function (fileName) {
+  $('#user-display-pic').attr("src", "/dp/" + fileName).attr('data-info', fileName);
+});
+
+//update all dps
+socket.on('load dp', function (fileName, friendUserId) {
+  setTimeout(function () {
+    $('#friend-display-picture').attr("src", "/dp/" + fileName).attr('data-info', fileName);
+  }, 200);
+});
+
+//update all dps
+socket.on('dp changed', function (fileName, friendUserId) {
+  if(friendUserId == readCode($('#chat-with-user-info').attr("data-info"))) {
+    setTimeout(function () {
+      $('#friend-display-picture').attr("src", "/dp/" + fileName).attr('data-info', fileName);
+    }, 15200);
+  }
+});
+
+//update dp for all users available in user list
+socket.on('update dp of user list', function(data) {
+  setTimeout(function () {
+    var element = $('li.user-list-item[data-info="' + getCode(data.userId) + '"] img.user-display-pic');
+    element.attr("src", '/dp/' + data.dpName);
+  }, 15000);
+});
+
+//handle issue : server connection fail
+socket.on('connection closed', function() {
+  document.write('<p class="server-error">Server is not responding, connection failed. We regret the inconvenience.</p>');
+});
+
+//handler if user session has been expired
+socket.on('user session is expired', function (data) {
+  if(readCode($('#loggedIn-user').attr('data-info')) == data) {
+    document.redirect('/');
   }
 });

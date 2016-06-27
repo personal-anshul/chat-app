@@ -67,11 +67,12 @@ input {
       border: 1px solid #23527c;
       border-radius: 4px;
       font-size: 16px;
-      padding: 8px 10px;
+      padding: 8px 10px 15px;
       min-width: 45%;
       max-width: 85%;
       position: relative;
       width: auto;
+      word-wrap: break-word;
       &.pull-right {
         background: #d0daf9;
       }
@@ -92,6 +93,18 @@ input {
 .error-msg {
   color: red;
   font-size: 12px;
+}
+.server-error {
+  background: rgba(234,201,244,0.7);
+  border: 1px solid #8d00b7;
+  border-radius: 5px;
+  box-shadow: 2px 1px 5px #A55CBB;
+  color: #5D4764;
+  font-weight: bold;
+  margin: 10% auto 0;
+  padding: 20px;
+  text-align: center;
+  width: 50%;
 }
 .login {
   height: 35px;
@@ -170,9 +183,14 @@ input {
   height: auto;
 }
 .navbar-toggle {
+  background: #4e7075;
   border-color: #5D4764 !important;
   display: block;
   margin-top: 5px;
+  &:hover,
+  &:focus {
+    background: darken(#4e7075, 10%) !important;
+  }
 }
 .navbar-inverse .navbar-brand {
   color: #fff;
@@ -196,7 +214,6 @@ input {
 .navbar-inverse .navbar-nav > li > a:focus {
   background-color: #333 !important;
 }
-.navbar-inverse .navbar-toggle
 .no-margin {
   margin: 0;
 }
@@ -254,7 +271,13 @@ input {
   width: 100%;
 }
 .attach-file-popup {
-  top: 20%;
+  top: 70px;
+}
+.popup-attach-dp {
+  top: 40px;
+}
+.popup-attach-friend-dp {
+  top: 100px;
 }
 .modal-userId-close {
   height: 35px;
@@ -349,7 +372,13 @@ input {
 .btn-display-picture {
   background: transparent;
   border: 0 none;
-  padding-right: 0;
+  padding: 0;
+  &:focus {
+    outline: 1px solid #333;
+  }
+}
+.btn-friend-display-picture:focus {
+  outline: 1px solid #ddd;
 }
 .display-picture {
   border: 1px solid #a9cce3;
@@ -357,13 +386,6 @@ input {
   display: none;
   height: 40px;
   width: 40px;
-}
-.thumbnail-dp {
-  border-radius: 15px;
-  display: inline-block;
-  height: 25px;
-  width: 25px;
-  margin-right: 5px;
 }
 .user-display-pic {
   border: 1px solid #555;
@@ -392,22 +414,26 @@ input {
 .active {
   background: #4e7075;
   color: #fff;
-  span {
-    color: #fff;
-  }
 }
 .preview-file-uploaded {
   display: block;
   margin: 0 auto;
-  max-height: 260px;
+  max-height: 200px;
   max-width: 95%;
+}
+.preview-dp {
+  border-radius: 100%;
+  display: block;
+  margin: 0 auto;
+  height: 250px;
+  width: 250px;
 }
 .file-shared-notification {
   background: #e6d8ff;
   border: 1px solid #23527c;
   border-radius: 4px;
   color: #4e7075;
-  padding: 5px 10px;
+  padding: 8px 10px 15px;
   text-align: center;
   .link-download {
     font-weight: bold;
@@ -505,16 +531,17 @@ input {
   width: auto;
   transition: right 0.5s linear;
 }
-.navbar-toggle {
-  height: 44px;
-  margin-top: 0;
-  padding: 5px;
-  transform: rotate(90deg);
-  width: 34px;
-  & .icon-bar + .icon-bar {
-    margin-top: 7px;
-  }
-}
+/*uncomment to get inverted hamburger icon*/
+// .navbar-toggle {
+//   height: 44px;
+//   margin-top: 0;
+//   padding: 5px;
+//   transform: rotate(90deg);
+//   width: 34px;
+//   & .icon-bar + .icon-bar {
+//     margin-top: 7px;
+//   }
+// }
 .icon-bar {
   margin-top: 0;
 }
