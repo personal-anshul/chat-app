@@ -7,5 +7,6 @@ tmp/
 uploads/
 node_modules/
 public/library/
+public/dp/
 *.css
 data/

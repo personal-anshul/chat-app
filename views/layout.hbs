@@ -22,15 +22,27 @@
           {{#if loggedInUser}}
           <div class="col-xs-7 user-detail text-right">
             <h4 class="userId-detail" title={{userName}}({{loggedInUser}})>
-              {{userNameShort}} (<span id="loggedIn-user" data-info="{{loggedInUserInfo}}">{{loggedInUserShort}}</span>) !! 
+              <span id="loggedIn-user" data-info="{{loggedInUserInfo}}">
+                <button type="button" name="button"
+                  id="btn-display-picture" class="btn-display-picture"
+                  data-toggle="modal" data-target="#attach-display-img">
+                  <img src="" onerror="this.src='/images/no-user.png'" alt="" class="user-display-pic" id="user-display-pic"/>
+                </button>
+              </span>
+              {{userNameShort}}
+              <span class="pipe"> | </span>
               <a href="/logout">logout</a>
             </h4>
+            <span id="pending-chat-count" class="notify-chat-pending">0</span>
             <button id="btn-toggle-user-list" type="button" class="navbar-toggle" data-toggle="collapse" data-target="#user-list">
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
             <div class="file-notification" id="file-received-notification">
+              <button type="button" id="close-notification" class="close">&times;</button>
+              <div class="span-user"></div>
+              <div class="span-msg"></div>
             </div>
           </div>
           {{/if}}
@@ -49,7 +61,41 @@
     </header>
     {{{body}}}
   </body>
+  <footer>
+    <audio id="audio-notification" src="/notification/notification.mp3" type="audio/mpeg" preload="auto"></audio>
+  </footer>
 </html>
+<div class="col-xs-12">
+  <!-- Modal popup -->
+  <section id="attach-display-img" class="modal fade popup-attach-dp" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content col-xs-12">
+        <form
+          id="uploadDp"
+          enctype="multipart/form-data"
+          action="/api/dp"
+          method="post">
+          <div class="modal-header col-xs-12">
+            <h4 class="modal-title">Tell us, how u look</h4>
+          </div>
+          <div class="modal-body col-xs-12">
+            <input id="input-attach-dp" type="file" name="dataFile"/>
+            <br>
+            <img id="dp-preview" class="preview-dp" src="" onerror="this.src='/images/no-user.png'"/>
+            <br>
+            <p id="invalid-dp" class="text-center"></p>
+            <p>Attach a png/jpeg/jpg image of square size <b>(height and width should be almost equal)</b> for better look.</p>
+          </div>
+          <div class="modal-footer col-xs-12">
+            <input id="submit-upload-dp" class="btn btn-primary" type="button" value="Upload" name="submit" disabled="disabled" onclick="uploadDisplayImage()">
+            <button id="close-upload-dp" type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            <input type="submit" class="submit-form" id="submit-dp-form"/>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
 <script type="text/javascript" src='/library/bootstrap/dist/js/bootstrap.min.js'></script>
 <script type="text/javascript" src='/socket.io/socket.io.js'></script>
 <script type="text/javascript" src="/javascripts/script.js"></script>

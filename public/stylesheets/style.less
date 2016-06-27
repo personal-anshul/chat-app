@@ -2,6 +2,10 @@ body {
   background: #edeff5 url("/images/background.jpeg") no-repeat fixed center 70px / contain;
   font: 16px "Jura", Helvetica, Arial, sans-serif;
   transition: all 1s linear;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 canvas {
   background: transparent;
@@ -27,6 +31,12 @@ input {
     -webkit-box-shadow: 0 0 0px 1000px white inset;
     transition: all 0.1s linear;
   }
+}
+.selectable {
+  user-select: initial;
+  -webkit-user-select: initial;
+  -moz-user-select: element;
+  -ms-user-select: initial;
 }
 .header {
   color: #fff;
@@ -57,11 +67,12 @@ input {
       border: 1px solid #23527c;
       border-radius: 4px;
       font-size: 16px;
-      padding: 8px 10px;
+      padding: 8px 10px 15px;
       min-width: 45%;
       max-width: 85%;
       position: relative;
       width: auto;
+      word-wrap: break-word;
       &.pull-right {
         background: #d0daf9;
       }
@@ -82,6 +93,18 @@ input {
 .error-msg {
   color: red;
   font-size: 12px;
+}
+.server-error {
+  background: rgba(234,201,244,0.7);
+  border: 1px solid #8d00b7;
+  border-radius: 5px;
+  box-shadow: 2px 1px 5px #A55CBB;
+  color: #5D4764;
+  font-weight: bold;
+  margin: 10% auto 0;
+  padding: 20px;
+  text-align: center;
+  width: 50%;
 }
 .login {
   height: 35px;
@@ -148,21 +171,26 @@ input {
   background: #1d1d1d;
   float: none;
   .user-detail {
-    margin: 12px 0 10px;
+    margin: 12px 0 0;
     padding: 0;
   }
   .userId-detail {
     display: inline-block;
-    margin-top: 12px;
-    margin-right: 10px;
+    margin: 2px 15px 0 2px;
   }
 }
 .navbar-brand {
   height: auto;
 }
 .navbar-toggle {
+  background: #4e7075;
+  border-color: #5D4764 !important;
   display: block;
   margin-top: 5px;
+  &:hover,
+  &:focus {
+    background: darken(#4e7075, 10%) !important;
+  }
 }
 .navbar-inverse .navbar-brand {
   color: #fff;
@@ -243,7 +271,13 @@ input {
   width: 100%;
 }
 .attach-file-popup {
-  top: 20%;
+  top: 70px;
+}
+.popup-attach-dp {
+  top: 40px;
+}
+.popup-attach-friend-dp {
+  top: 100px;
 }
 .modal-userId-close {
   height: 35px;
@@ -335,6 +369,17 @@ input {
   display: inline-block;
   width: 210%;
 }
+.btn-display-picture {
+  background: transparent;
+  border: 0 none;
+  padding: 0;
+  &:focus {
+    outline: 1px solid #333;
+  }
+}
+.btn-friend-display-picture:focus {
+  outline: 1px solid #ddd;
+}
 .display-picture {
   border: 1px solid #a9cce3;
   border-radius: 20px;
@@ -342,11 +387,12 @@ input {
   height: 40px;
   width: 40px;
 }
-.thumbnail-dp {
-  border-radius: 15px;
+.user-display-pic {
+  border: 1px solid #555;
+  border-radius: 20px;
   display: inline-block;
-  height: 25px;
-  width: 25px;
+  height: 40px;
+  width: 40px;
   margin-right: 5px;
 }
 .chat-with-user {
@@ -368,22 +414,26 @@ input {
 .active {
   background: #4e7075;
   color: #fff;
-  span {
-    color: #fff;
-  }
 }
 .preview-file-uploaded {
   display: block;
   margin: 0 auto;
-  max-height: 260px;
-  max-width: 500px
+  max-height: 200px;
+  max-width: 95%;
+}
+.preview-dp {
+  border-radius: 100%;
+  display: block;
+  margin: 0 auto;
+  height: 250px;
+  width: 250px;
 }
 .file-shared-notification {
   background: #e6d8ff;
   border: 1px solid #23527c;
   border-radius: 4px;
   color: #4e7075;
-  padding: 5px 10px;
+  padding: 8px 10px 15px;
   text-align: center;
   .link-download {
     font-weight: bold;
@@ -392,6 +442,35 @@ input {
       text-decoration: none;
     }
   }
+}
+.file-animation {
+  animation: bounce 0.8s ease-in-out;
+}
+.notify-chat-pending {
+  background: #a9cce3;
+  border-radius: 100px;
+  color: #333;
+  display: none;
+  height: auto;
+  margin-right: -6px;
+  padding: 0 5px;
+  position: fixed;
+  right: 10px;
+  top: 5px;
+  width: auto;
+  z-index: 10;
+}
+.chat-pending {
+  background: #eac9f4;
+  border-radius: 100px;
+  color: #5D4764;
+  display: none;
+  height: auto;
+  margin-left: 10px;
+  padding: 0 5px;
+  position: relative;
+  width: auto;
+  z-index: 10;
 }
 .beta-panel {
   left: 30%;
@@ -406,26 +485,70 @@ input {
   font-size: 12px;
   padding: 2px 5px;
 }
+.span-user {
+  font-size: 18px;
+  font-weight: bold;
+  margin-right: 30px;
+  text-align: left;
+}
+.span-msg {
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: left;
+}
 .submit-form {
   display: none;
 }
 .file-notification {
-  background: #a5b9bd;
-  border: 1px solid #8222e2;
-  border-radius: 5px;
-  box-shadow: 2px 2px 2px #275773;
-  color: #8c2c2c;
+  background: #e2e2e2;
+  border: 1px solid #000000;
+  border-radius: 2px;
+  box-shadow: 2px 2px 2px #000000;
+  color: #2500dc;
   padding: 10px;
   position: absolute;
   right: -100px;
   top: 0;
   width: 0;
   z-index: 1000;
+  .close {
+    font-size: 30px;
+    margin-top: -6px;
+    padding: 0 6px;
+    &:hover {
+      animation: spin 0.5s ease-in-out;
+    }
+  }
+  .span {
+    display: inline-block;
+    margin-right: 10px;
+    margin-top: 3px;
+  }
 }
 .show-file-notification {
+  min-width: 40vw;
   right: 10px !important;
   width: auto;
   transition: right 0.5s linear;
+}
+/*uncomment to get inverted hamburger icon*/
+// .navbar-toggle {
+//   height: 44px;
+//   margin-top: 0;
+//   padding: 5px;
+//   transform: rotate(90deg);
+//   width: 34px;
+//   & .icon-bar + .icon-bar {
+//     margin-top: 7px;
+//   }
+// }
+.icon-bar {
+  margin-top: 0;
+}
+.pipe {
+  display: inline-block;
+  margin: 0 5px;
+  transform: scale(2);
 }
 /* Custom Scrollbar */
 .scrollbar-panel {
@@ -518,6 +641,11 @@ input {
   .radio-panel .radio-user {
     margin-top: 0;
   }
+  .file-notification {
+    .span {
+      margin-top: 2px;
+    }
+  }
 }
 
 @media screen and (max-width: 767px) {
@@ -573,5 +701,9 @@ input {
     .beta-panel {
       left: 60px;
     }
+  }
+  .notify-chat-pending {
+    left: 3px;
+    right: inherit;
   }
 }
