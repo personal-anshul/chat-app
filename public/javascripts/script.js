@@ -35,6 +35,38 @@ function readCode(stringData) {
   return code;
 }
 
+//get query string from url
+function getParameterByName(name, url) {
+  if (!url) {
+    url = window.location.href;
+  }
+  name = name.replace(/[\[\]]/g, "\\$&");
+  var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+    results = regex.exec(url);
+  if (!results)
+    return null;
+  if (!results[2])
+    return '';
+  return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+//check if userID is specified to load chat
+function checkUserIdForChat() {
+  var id = getParameterByName('id');
+  if(id) {
+    $('.spinner').show();
+    $('#messages').html('');
+    setTimeout(function () {
+      var user = $('li[data-info="' + getCode(id) + '"]').attr('data-value');
+      $('li[data-info="' + getCode(id) + '"]').addClass('active');
+      $('#input-message').val('');
+      $('#btn-send-message, #btn-attachment, #input-message').removeAttr('disabled');
+      socket.emit('load related chat', user);
+      $('.spinner').hide();
+    }, 5000)
+  }
+}
+
 //check if user is in proper window to get chat msg and chat have already been initiated
 function checkPageStatus() {
   if($('#messages').html().indexOf('Oops.. There is no chat between you both yet.') != -1) {
@@ -78,7 +110,7 @@ function uploadDisplayImage() {
     var fileType = document.getElementById('input-attach-dp').value.split('.'),
       currentDateTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf();
     if(fileType.length == 2) {
-      document.getElementById("uploadDp").action = "/api/dp?span=" + currentDateTime;
+      document.getElementById("uploadDp").action = "/api/dp?span=" + currentDateTime + "&id=" + readCode($('#chat-with-user-info').attr('data-info'));
       socket.emit('update dp', currentDateTime);
       setTimeout(function() {
         $('#submit-dp-form').click();
@@ -152,10 +184,10 @@ $('.closePopup').on("click", function () {
   $('#input-message').focus();
   setTimeout(function() {
     $('.modal-backdrop').hide();
-    $('#loggedIn-user').css({"border": "2px solid #3498DB", "padding": "0 10px", "transition": "all 0.8s linear" });
+    // $('#loggedIn-user').css({"border": "2px solid #3498DB", "padding": "0 10px", "transition": "all 0.8s linear" });
   }, 1500);
   setTimeout(function() {
-    $('#loggedIn-user').css({"border": "2px solid #222", "padding": "0", "transition": "all 1s linear"});
+    // $('#loggedIn-user').css({"border": "2px solid #222", "padding": "0", "transition": "all 1s linear"});
   }, 3000);
 });
 
@@ -166,7 +198,7 @@ $('#nav-user-list').delegate('li', 'click', function(elm) {
     $('li').removeClass('active');
     $('#messages').html('');
     $('#input-message').val('');
-    $('#btn-send-message, #input-message').removeAttr('disabled');
+    $('#btn-send-message, #btn-attachment, #input-message').removeAttr('disabled');
     $('.spinner').show();
     $('#user-list').removeClass('in');
     $(this).addClass('active');
@@ -322,7 +354,7 @@ socket.on('load all users', function (data, pendingChat) {
 
 //socket handler to if no user to load
 socket.on('no user to load', function () {
-  $('#nav-user-list').append('<li class="user-list-item text-center"> Ahh!! Looks like there is no User to chat.. </li>');
+  $('#nav-user-list').append('<li class="user-list-item text-center no-users-to-load"> Ahh!! Looks like there is no User to chat.. </li>');
 });
 
 //socket handler to load user details with whom loggined user wanted to chat
@@ -353,6 +385,8 @@ socket.on('no chat to load', function() {
 socket.on('show load all chat link', function (data) {
   $('.load-chat').removeClass("hide");
   $('.load-chat').addClass("show");
+  $('.loaded-chat').removeClass("show");
+  $('.loaded-chat').addClass("hide");
   $('#input-message').focus();
 });
 
@@ -360,7 +394,8 @@ socket.on('show load all chat link', function (data) {
 socket.on('hide load all chat link', function (data) {
   $('.load-chat').removeClass("show");
   $('.load-chat').addClass("hide");
-  $('.loaded-chat').removeClass("show");
+  $('.loaded-chat').addClass("show");
+  $('.loaded-chat').removeClass("hide");
   $('#input-message').focus();
 });
 
@@ -393,15 +428,23 @@ socket.on('update all users', function (data, pendingChat) {
   if(data.userId != readCode($('#loggedIn-user').attr('data-info'))) {
     var statusBar = "";
       element = $("li[data-info='" + getCode(data.userId) + "']" + " span.user-status");
-    if(data.isConnected == 1) {
-      statusBar = "Online";
-      element.removeClass('user-offline').addClass('user-online');
+    if(element.length == 1) {
+      if(data.isConnected == 1) {
+        statusBar = "Online";
+        element.removeClass('user-offline').addClass('user-online');
+      }
+      else {
+        statusBar = "Offline";
+        element.removeClass('user-online').addClass('user-offline');
+      }
+      element.html(statusBar);
     }
     else {
-      statusBar = "Offline";
-      element.removeClass('user-online').addClass('user-offline');
+      var defaultImg = "onerror='this.src=\"/images/no-user.png\"'",
+        statusBar = data.isConnected == 1 ? "<span class='user-status user-online'>Online</span>" : "<span class='user-status user-offline'>Offline</span>",
+        pendingChat = 0;
+      $('#nav-user-list').append('<li class="user-list-item" data-info="' + getCode(data.userId) + '" data-value="'+ data._id +'"><img class="user-display-pic" src="/dp/' + data.dpName + '" alt="user"' + defaultImg + '/>' + data.userId + ' (' + data.email + ') - ' + statusBar + '<span class="chat-pending">' + pendingChat + '</span></li>');
     }
-    element.html(statusBar);
   }
   if(data.userId == readCode($('#chat-with-user-info').attr("data-info"))) {
     var lastSeen = new Date(data.lastConnected).toJSON().split('T');
@@ -416,6 +459,7 @@ socket.on('update all users', function (data, pendingChat) {
 
 //socket handler to load chats
 socket.on('event of chat on server', function (data) {
+  //notification related code
   if(readCode($('#loggedIn-user').attr('data-info')) == data.toUser.trim() && readCode($('#chat-with-user-info').attr("data-info")) != data.fromUser.trim()) {
     if(data.content != null) {
       $('#file-received-notification .span-user').html(data.fromUser);
@@ -432,6 +476,7 @@ socket.on('event of chat on server', function (data) {
       }, 600);
     }
   }
+  //chat display if chat is meant for logged-in user
   if((readCode($('#loggedIn-user').attr('data-info')) == data.toUser.trim() && readCode($('#chat-with-user-info').attr("data-info")) == data.fromUser.trim())
     || (readCode($('#chat-with-user-info').attr("data-info")) == data.toUser.trim() && readCode($('#loggedIn-user').attr('data-info')) == data.fromUser.trim())) {
     if(checkPageStatus()) {
@@ -539,6 +584,6 @@ socket.on('connection closed', function() {
 //handler if user session has been expired
 socket.on('user session is expired', function (data) {
   if(readCode($('#loggedIn-user').attr('data-info')) == data) {
-    document.redirect('/');
+    // window.location.href = '/';
   }
 });

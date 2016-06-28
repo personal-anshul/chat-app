@@ -48,7 +48,7 @@
         <img class="img-send-msg" width="30px" src="/images/btn-send-msg.svg" alt="" />
       </button>
       <button
-        type="button" name="button"  id="btn-send-message"
+        type="button" name="button"  id="btn-attachment"
         class="btn btn-send-message" disabled="disabled"
         data-toggle="modal" data-target="#attach-file-popup">
         <img class="img-send-msg" width="30px" src="/images/btn-attachment.svg" alt="" />
@@ -115,7 +115,7 @@
         <div class="modal-body col-xs-12">
           <p>Dear <strong>{{isNewUser}},</strong>
           <p>Greeting from Windbag.</p><br>
-          <p>Here's your user id - <strong>{{loggedInUser}}</strong>. Please make a note as you can use it for future login(s).</p><br>
+          <p>Here's your user id - <strong class="selectable">{{loggedInUser}}</strong>. Please make a note as you can use it for future login(s).</p><br>
           <small> - Windbag Support Team </small>
         </div>
         <div class="modal-footer col-xs-12">
@@ -129,5 +129,6 @@
 <script>
   $(document).ready(function(){
     $('#userId-popup').modal('show');
+    checkUserIdForChat();
   });
 </script>

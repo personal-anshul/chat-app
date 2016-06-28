@@ -111,8 +111,7 @@ app.post('/api/photo', function(req,res){
     if(err) {
       return res.end("Error uploading file.");
     }
-    //TODO: do not reload the page
-    res.redirect("/chat");
+    res.redirect("/chat?id=" + req.query.id);
   });
 });
 //post request to upload data file
@@ -121,8 +120,12 @@ app.post('/api/dp', function(req,res){
     if(err) {
       return res.end("Error uploading dp.");
     }
-    //TODO: do not reload the page
-    res.redirect("/chat");
+    if(req.query.id) {
+      res.redirect("/chat?id=" + req.query.id);
+    }
+    else {
+      res.redirect("/chat");
+    }
   });
 });
 //post request to download data file
@@ -165,9 +168,9 @@ app.post('/', function (req, res) {
             email: users.email,
             userName: users.name,
             password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
+            dpName: null,
             isConnected: 1,
             lastConnected: new Date().setMinutes(new Date().getMinutes() + 330).valueOf(),
-            dpName: null,
             createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
           },
           function (err, o) {

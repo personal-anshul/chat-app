@@ -1,5 +1,6 @@
 body {
   background: #edeff5 url("/images/background.jpeg") no-repeat fixed center 70px / contain;
+  cursor: default;
   font: 16px "Jura", Helvetica, Arial, sans-serif;
   transition: all 1s linear;
   user-select: none;
@@ -33,6 +34,7 @@ input {
   }
 }
 .selectable {
+  cursor: text;
   user-select: initial;
   -webkit-user-select: initial;
   -moz-user-select: element;
@@ -549,6 +551,10 @@ input {
   display: inline-block;
   margin: 0 5px;
   transform: scale(2);
+}
+.no-users-to-load {
+  margin-top: 60px;
+  cursor: default;
 }
 /* Custom Scrollbar */
 .scrollbar-panel {
