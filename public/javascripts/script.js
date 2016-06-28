@@ -326,6 +326,7 @@ $('#close-upload-popup').on("click", function () {
 //close notification bar
 $("#close-notification").on("click", function () {
   $('#file-received-notification').removeClass('file-animation').removeClass('show-file-notification');
+  document.title = "Windbag";
 });
 
 //Make list empty before reload user list
@@ -467,6 +468,7 @@ socket.on('event of chat on server', function (data) {
       $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + 1);
       $('#pending-chat-count').css({ "display": "inline-block"});
       document.getElementById('audio-notification').play();
+      document.title = data.fromUser + " is saying...";
       var element = $("li[data-info='" + getCode(data.fromUser.trim()) + "']" + " span.chat-pending");
       element.html(parseInt(element.html()) + 1);
       element.css({ "display": "inline-block"});
@@ -510,6 +512,7 @@ socket.on("notify file received", function(userSent, userReceived, fileType, cur
     $('#file-received-notification .span-user').html(userSent);
     $('#file-received-notification .span-msg').html('shared a file with you.');
     document.getElementById('audio-notification').play();
+    document.title = userSent + " is saying...";
     $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + 1);
     $('#pending-chat-count').css({ "display": "inline-block"});
     var element = $("li[data-info='" + getCode(userSent) + "']" + " span.chat-pending");
