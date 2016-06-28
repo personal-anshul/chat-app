@@ -65,9 +65,9 @@ input {
   .message-panel {
     margin: 20px 0 110px;
     .para-message {
-      background: #efefef;
       border: 1px solid #23527c;
       border-radius: 4px;
+      color: #000;
       font-size: 16px;
       padding: 8px 10px 15px;
       min-width: 45%;
@@ -75,8 +75,18 @@ input {
       position: relative;
       width: auto;
       word-wrap: break-word;
+      &.pull-left {
+        background: #d1e4f3;
+      }
       &.pull-right {
-        background: #d0daf9;
+        background: #efe0f3;
+      }
+      b {
+        color: #c100ff;
+        font-size: 18px;
+      }
+      small {
+        color: #555;
       }
     }
   }

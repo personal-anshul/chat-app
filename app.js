@@ -154,7 +154,7 @@ app.post('/', function (req, res) {
   users.name = isValid(req.body.userName) ? req.body.userName.toLowerCase() : undefined;
   global.MongoClient.connect(global.url, function (err, db) {
     if(err){
-      socket.emit('connection closed');
+      console.warn(err.message);
     }
     else {
       var collection = db.collection('user_info');
@@ -242,7 +242,7 @@ ioSocket.on('connection', function (socket) {
   //event handler to load chat on connection
   global.MongoClient.connect(global.url, function (err, db) {
     if(err){
-      socket.emit('connection closed');
+      console.warn(err.message);
     }
     else {
       if(socket.handshake.session.user) {
@@ -305,7 +305,7 @@ ioSocket.on('connection', function (socket) {
     global.errorMessage = "";
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
-        socket.emit('connection closed');
+        console.warn(err.message);
       }
       else {
         db.collection('user_info').update(
@@ -346,7 +346,7 @@ ioSocket.on('connection', function (socket) {
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
         socket.emit('hide spinner');
-        socket.emit('connection closed');
+        console.warn(err.message);
       }
       else {
         if(socket.handshake.session.user) {
@@ -413,7 +413,7 @@ ioSocket.on('connection', function (socket) {
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
         socket.emit('hide spinner');
-        socket.emit('connection closed');
+        console.warn(err.message);
       }
       else {
         if(socket.handshake.session.user) {
@@ -455,7 +455,7 @@ ioSocket.on('connection', function (socket) {
   socket.on('event of chat on client', function (message) {
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
-        socket.emit('connection closed');
+        console.warn(err.message);
       }
       else {
         if(socket.handshake.session.user && socket.handshake.session.friend) {
@@ -497,7 +497,7 @@ ioSocket.on('connection', function (socket) {
   socket.on('pending-chat', function (userTo, userFrom) {
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
-        socket.emit('connection closed');
+        console.warn(err.message);
       }
       else {
         var collection = db.collection('pending_chat');
@@ -535,7 +535,7 @@ ioSocket.on('connection', function (socket) {
     if(socket.handshake.session.user) {
       global.MongoClient.connect(global.url, function (err, db) {
         if(err){
-          socket.emit('connection closed');
+          console.warn(err.message);
         }
         else {
           var collection = db.collection('user_info'),
@@ -569,7 +569,7 @@ ioSocket.on('connection', function (socket) {
       userReceived = socket.handshake.session.friend;
     global.MongoClient.connect(global.url, function (err, db) {
       if(err){
-        socket.emit('connection closed');
+        console.warn(err.message);
       }
       else {
         if(userSent && userReceived) {
