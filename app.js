@@ -466,7 +466,7 @@ ioSocket.on('connection', function (socket) {
                 content: message.content,
                 fromUser: socket.handshake.session.user,
                 toUser: socket.handshake.session.friend,
-                fileType: null,
+                fileType: message.fileType,
                 createdOn: message.createdOn
                },
                function (err, o) {

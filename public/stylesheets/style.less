@@ -1,3 +1,5 @@
+@import "vector-icons";
+
 body {
   background: #edeff5 url("/images/background.jpeg") no-repeat fixed center 70px / contain;
   cursor: default;
@@ -84,9 +86,14 @@ input {
       b {
         color: #c100ff;
         font-size: 18px;
+        vertical-align: top;
       }
       small {
         color: #555;
+      }
+      span[class*='vector'] {
+        font-size: 44px;
+        margin-left: 10px;
       }
     }
   }
@@ -625,6 +632,35 @@ input {
   -khtml-user-select: none;
   -webkit-user-select: none;
 }
+.btn-smiley {
+  height: 42px;
+  margin: 0 !important;
+  width: 42px;
+}
+.btn-open-smile {
+  color: #3086ec;
+  font-size: 30px;
+}
+.smiley {
+  position: fixed !important;
+  .smiley-icons {
+    border: 1px solid #ddd;
+    font-size: 23px;
+    cursor: pointer;
+    display: inline-block;
+    margin-top: 2px;
+    padding: 5px;
+  }
+  .smiley-symbols {
+    bottom: 85px;
+    position: absolute;
+    right: 2px;
+    width: 500px;
+    .modal-footer {
+      height: 35px;
+    }
+  }
+}
 
 @keyframes spin {
   from { transform: rotate(0deg); }
@@ -700,6 +736,12 @@ input {
   .navbar-nav > li {
     margin-left: 20px;
   }
+  .smiley {
+    .smiley-symbols {
+      bottom: 167px;
+      right: -8px;
+    }
+  }
 }
 
 @media screen and (max-width: 520px) {
@@ -721,5 +763,10 @@ input {
   .notify-chat-pending {
     left: 3px;
     right: inherit;
+  }
+  .smiley {
+    .smiley-symbols {
+      width: 90%;
+    }
   }
 }
