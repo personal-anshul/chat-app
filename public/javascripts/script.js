@@ -1,3 +1,72 @@
+var smileySymbols = [
+  ":)",
+  ":(",
+  ";(",
+  ";)",
+  ":D",
+  ":d",
+  ":p",
+  ":P",
+  "man",
+  "woman",
+  "couple",
+  "laugh",
+  "happy",
+  "smile",
+  "bsmile",
+  "tongue",
+  "cheeky",
+  "sad",
+  "toosad",
+  "wink",
+  "winksmile",
+  "grin",
+  "evil",
+  "cool",
+  "supercool",
+  "angry",
+  "red",
+  "deviltease",
+  "devilanger",
+  "shocked",
+  "amazed",
+  "baffled",
+  "noclue",
+  "confuse",
+  "confused",
+  "neutral",
+  "speechless",
+  "hipster",
+  "hipstermood",
+  "wonderhappy",
+  "wondersad",
+  "sleepy",
+  "sleeping",
+  "frustrate",
+  "abuse",
+  "cry",
+  "cryshout",
+  "imin",
+  "you",
+  "imout",
+  "he",
+  "blocked",
+  "no",
+  "yes",
+  "right"
+]
+
+var outOfWindow = false;
+$(window).focus(function() {
+  if (!outOfWindow)
+    outOfWindow = true;
+});
+
+$(window).blur(function() {
+  if (outOfWindow)
+    outOfWindow = false;
+});
+
 //scroll page till bottom
 $(document).ready(function() {
   window.scrollTo(0, document.body.scrollHeight);
@@ -109,11 +178,75 @@ $('#btn-send-message').on("click", function () {
     fileType: null,
     createdOn: null
   };
-  msg.content = $('#input-message').val().trim().slice(0, 150);
+  var content = $('#input-message').val().trim().slice(0, 150);
+  $('#hidden-element').html(content);
+  if(content.indexOf('(') != -1 && content.indexOf(')') != -1) {
+    content = content.replace(/[(]/g, "<span class='temp-vector'>");
+    content = content.replace(/[)]/g, "</span>");
+    $('#hidden-element').html(content);
+    var data = document.getElementsByClassName('temp-vector');
+    for(i = 0; i < data.length; i++) {
+      if(smileySymbols.indexOf(data[i].innerHTML) != -1) {
+        if(smileySymbols.indexOf(data[i].innerHTML) > 7) {
+          $(data[i]).addClass('vector-' + data[i].innerHTML);
+        }
+        else {
+          switch (smileySymbols.indexOf(data[i].innerHTML)) {
+            case 0:
+              $(data[i]).addClass('vector-smile');
+              break;
+            case 1:
+              $(data[i]).addClass('vector-sad');
+              break;
+            case 2:
+              $(data[i]).addClass('vector-cry');
+              break;
+            case 3:
+              $(data[i]).addClass('vector-wink');
+              break;
+            case 4:
+              $(data[i]).addClass('vector-laugh');
+              break;
+            case 5:
+              $(data[i]).addClass('vector-happy');
+              break;
+            case 6:
+              $(data[i]).addClass('vector-tongue');
+              break;
+            case 7:
+              $(data[i]).addClass('vector-cheeky');
+              break;
+            default:
+          }
+        }
+        data[i].innerHTML = "";
+      }
+      else {
+        data[i].innerHTML = "(" + data[i].innerHTML + ")";
+      }
+    }
+    if(!(data.length == 1 && (content.indexOf('<span') == 0 && content.indexOf('</span>') == content.length - 7))) {
+      $('.temp-vector').addClass('small-vector');
+    }
+    $('.temp-vector').removeClass('temp-vector');
+  }
+  else {
+    content = content.replace(":)", "<span class='small-vector vector-smile'></span>");
+    content = content.replace(":(", "<span class='small-vector vector-sad'></span>");
+    content = content.replace(";(", "<span class='small-vector vector-cry'></span>");
+    content = content.replace(";)", "<span class='small-vector vector-wink'></span>");
+    content = content.replace(":D", "<span class='small-vector vector-laugh'></span>");
+    content = content.replace(":d", "<span class='small-vector vector-happy'></span>");
+    content = content.replace(":p", "<span class='small-vector vector-tongue'></span>");
+    content = content.replace(":P", "<span class='small-vector vector-cheeky'></span>");
+    $('#hidden-element').html(content);
+  }
+  msg.content = $('#hidden-element').html();
   msg.fromUser = readCode($('#loggedIn-user').attr('data-info'));
   msg.toUser = readCode($('#chat-with-user-info').attr("data-info"));
   msg.createdOn = new Date().setMinutes(new Date().getMinutes() + 330).valueOf();
   socket.emit('pending-chat', msg.toUser, msg.fromUser);
+  $('#hidden-element').html('');
   if(msg.content !== "") {
     socket.emit('event of chat on client', msg);
     socket.emit('remove typing userinfo');
@@ -233,27 +366,10 @@ $('#smiley-section').on('mouseleave', function (event) {
 
 //broadcast smiley as messages
 $('.smiley-icons').on('click', function (event) {
-  var msg  = {
-    content: null,
-    toUser: null,
-    fromUser: null,
-    fileType: null,
-    createdOn: null
-  };
-  msg.content = $(this).attr('data-value');
-  msg.fromUser = readCode($('#loggedIn-user').attr('data-info'));
-  msg.toUser = readCode($('#chat-with-user-info').attr("data-info"));
-  msg.fileType = "smiley";
-  msg.createdOn = new Date().setMinutes(new Date().getMinutes() + 330).valueOf();
-  socket.emit('pending-chat', msg.toUser, msg.fromUser);
-  if(msg.content !== "") {
-    socket.emit('event of chat on client', msg);
-    if(checkPageStatus()) {
-      var chatTime = new Date(msg.createdOn).toJSON().split('T');
-      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.fromUser + ": </b><span class='vector-" + msg.content + "'>" + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
-    }
-  }
-  window.scrollTo(0, document.body.scrollHeight);
   $('#btn-smiley').click();
   $('.smiley-meaning').html("<small>no selection..</small>");
+  $('#input-message').val($('#input-message').val() + "(" + $(this).attr('data-value') + ")");
+  setTimeout(function () {
+    $('#input-message').focus();
+  }, 500);
 });

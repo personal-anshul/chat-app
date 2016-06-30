@@ -130,8 +130,8 @@ socket.on('update all users', function (data, pendingChat) {
 //socket handler to load chats
 socket.on('event of chat on server', function (data) {
   //notification related code
-  if(readCode($('#loggedIn-user').attr('data-info')) == data.toUser.trim() && readCode($('#chat-with-user-info').attr("data-info")) != data.fromUser.trim()) {
-    if(data.content != null) {
+  if((readCode($('#loggedIn-user').attr('data-info')) == data.toUser.trim() && readCode($('#chat-with-user-info').attr("data-info")) != data.fromUser.trim()) || !outOfWindow ) {
+    if(data.content != null && readCode($('#loggedIn-user').attr('data-info')) == data.toUser.trim()) {
       $('#file-received-notification .span-user').html(data.fromUser);
       $('#file-received-notification .span-msg').html(data.content);
       $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + 1);
@@ -160,8 +160,10 @@ socket.on('event of chat on server', function (data) {
           $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>You have shared a file with " + data.toUser + ". Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUser + "&name=" + data.toUser + "&span=" + data.createdOn + "&type=" + data.fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
         else {
-          var spanClass = (data.fileType == "smiley") ? 'vector-' + data.content : 'selectable';
-          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUser + ": </b><span class='" + spanClass + "'>" + (data.fileType == "smiley" ? "": data.content) + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+          if(data.content.indexOf('<span>') != -1) {
+
+          }
+          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + data.fromUser + ": </b><span class='selectable'>" + data.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
       }
       else {
@@ -169,8 +171,7 @@ socket.on('event of chat on server', function (data) {
           $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'>" + data.fromUser + " has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + data.fromUser + "&name=" + data.toUser + "&span=" + data.createdOn + "&type=" + data.fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
         else {
-          var spanClass = (data.fileType == "smiley") ? 'vector-' + data.content : 'selectable';
-          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" +  data.fromUser + ": </b><span class='" + spanClass + "'>" + (data.fileType == "smiley" ? "": data.content) + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+          $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-left para-message'><b>" + data.fromUser + ": </b><span class='selectable'>" + data.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
         }
       }
     }
