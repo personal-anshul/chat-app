@@ -33,7 +33,7 @@
     <small id="typing-user" class="typing-user-text"></small>
   </aside>
   <section class="form-inline text-right">
-    <div class="form-group col-sm-push-3 col-xs-push-0 col-sm-7 col-xs-12">
+    <div class="form-group col-sm-push-2 col-xs-push-0 col-sm-7 col-xs-12">
       <textarea
         id="input-message"
         class="input-message form-control col-xs-12"
@@ -43,22 +43,28 @@
         placeholder="write your message here...">
       </textarea>
     </div>
-    <div class="form-group no-padding col-sm-push-3 col-xs-push-6 col-sm-2 col-xs-6">
-      <button type="button" name="button"  id="btn-send-message" class="btn btn-send-message" disabled="disabled">
+    <div class="form-group no-padding col-sm-push-2 col-xs-push-6 col-sm-3 col-xs-6">
+      <button type="button" name="button" id="btn-send-message" class="btn btn-send-message" disabled="disabled">
         <img class="img-send-msg" width="30px" src="/images/btn-send-msg.svg" alt="" />
       </button>
       <button
-        type="button" name="button"  id="btn-send-message"
+        type="button" name="button" id="btn-attachment"
         class="btn btn-send-message" disabled="disabled"
         data-toggle="modal" data-target="#attach-file-popup">
         <img class="img-send-msg" width="30px" src="/images/btn-attachment.svg" alt="" />
       </button>
+      <button
+        type="button" name="button" id="btn-smiley"
+        class="btn btn-send-message btn-smiley" disabled="disabled"
+        data-toggle="modal" data-target="#smiley-panel">
+        <span class="btn-open-smile vector-smile" />
+      </button>
     </div>
   </section>
 </footer>
-<div class="col-xs-12">
+<section class="share-file-popup col-xs-12">
   <!-- Modal popup -->
-  <section id="attach-file-popup" class="modal fade attach-file-popup" role="dialog">
+  <article id="attach-file-popup" class="modal fade attach-file-popup" role="dialog">
     <div class="modal-dialog">
       <div class="modal-content col-xs-12">
         <form
@@ -84,11 +90,11 @@
         </form>
       </div>
     </div>
-  </section>
-</div>
-<div class="col-xs-12">
+  </article>
+</section>
+<section class="friend-dp-preview-popup col-xs-12">
   <!-- Modal popup -->
-  <section id="attach-friend-display-img" class="modal fade popup-attach-friend-dp" role="dialog">
+  <article id="attach-friend-display-img" class="modal fade popup-attach-friend-dp" role="dialog">
     <div class="modal-dialog">
       <div class="modal-content col-xs-12">
         <div class="modal-body col-xs-12">
@@ -101,10 +107,69 @@
         </div>
       </div>
     </div>
-  </section>
-</div>
+  </article>
+</section>
+<section id="smiley-panel" class="col-xs-12 smiley modal fade">
+  <div class="modal-dialog smiley-symbols">
+    <div class="modal-content col-xs-12">
+      <div id="smiley-section" class="modal-body col-xs-12">
+        <span class="smiley-icons vector-smile" data-info="smile" data-value="smile"></span>
+        <span class="smiley-icons vector-bsmile" data-info="big smile" data-value="bsmile"></span>
+        <span class="smiley-icons vector-laugh" data-info="laugh" data-value="laugh"></span>
+        <span class="smiley-icons vector-happy" data-info="happy" data-value="happy"></span>
+        <span class="smiley-icons vector-sad" data-info="sad" data-value="sad"></span>
+        <span class="smiley-icons vector-toosad" data-info="too sad" data-value="toosad"></span>
+        <span class="smiley-icons vector-cry" data-info="crying" data-value="cry"></span>
+        <span class="smiley-icons vector-cryshout" data-info="crying and shouting" data-value="cryshout"></span>
+        <span class="smiley-icons vector-wink" data-info="wink" data-value="wink"></span>
+        <span class="smiley-icons vector-winksmile" data-info="wink with smile" data-value="winksmile"></span>
+        <span class="smiley-icons vector-tongue" data-info="tongue" data-value="tongue"></span>
+        <span class="smiley-icons vector-cheeky" data-info="cheeky" data-value="cheeky"></span>
+        <span class="smiley-icons vector-grin" data-info="grin" data-value="grin"></span>
+        <span class="smiley-icons vector-evil" data-info="evil grin" data-value="evil"></span>
+        <span class="smiley-icons vector-wonderhappy" data-info="wondering with happiness" data-value="wonderhappy"></span>
+        <span class="smiley-icons vector-wondersad" data-info="wondering with sadness" data-value="wondersad"></span>
+        <span class="smiley-icons vector-frustrate" data-info="frustrated" data-value="frustrate"></span>
+        <span class="smiley-icons vector-abuse" data-info="abuse after frustration" data-value="abuse"></span>
+        <span class="smiley-icons vector-angry" data-info="angry" data-value="angry"></span>
+        <span class="smiley-icons vector-red" data-info="extremely angry" data-value="red"></span>
+        <span class="smiley-icons vector-shocked" data-info="shocked" data-value="shocked"></span>
+        <span class="smiley-icons vector-amazed" data-info="amazed" data-value="amazed"></span>
+        <span class="smiley-icons vector-confuse" data-info="confused" data-value="confuse"></span>
+        <span class="smiley-icons vector-confused" data-info="completely confused" data-value="confused"></span>
+        <span class="smiley-icons vector-deviltease" data-info="devil with tease" data-value="deviltease"></span>
+        <span class="smiley-icons vector-devilanger" data-info="devil with anger" data-value="devilanger"></span>
+        <span class="smiley-icons vector-cool" data-info="cool" data-value="cool"></span>
+        <span class="smiley-icons vector-supercool" data-info="super cool" data-value="supercool"></span>
+        <span class="smiley-icons vector-neutral" data-info="neutral" data-value="neutral"></span>
+        <span class="smiley-icons vector-speechless" data-info="speechless" data-value="speechless"></span>
+        <span class="smiley-icons vector-sleepy" data-info="sleepy" data-value="sleepy"></span>
+        <span class="smiley-icons vector-sleeping" data-info="sleeping" data-value="sleeping"></span>
+        <span class="smiley-icons vector-baffled" data-info="baffled a bit" data-value="baffled"></span>
+        <span class="smiley-icons vector-noclue" data-info="baffled, have no clue" data-value="noclue"></span>
+        <span class="smiley-icons vector-hipster" data-info="hipster" data-value="hipster"></span>
+        <span class="smiley-icons vector-hipstermood" data-info="hipster mood" data-value="hipstermood"></span>
+        <span class="smiley-icons vector-no" data-info="nooo" data-value="no"></span>
+        <span class="smiley-icons vector-yes" data-info="yesss" data-value="yes"></span>
+        <span class="smiley-icons vector-right" data-info="right" data-value="right"></span>
+        <span class="smiley-icons vector-blocked" data-info="blocked" data-value="blocked"></span>
+        <span class="smiley-icons vector-imin" data-info="i m in.." data-value="imin"></span>
+        <span class="smiley-icons vector-you" data-info="pointing you.." data-value="you"></span>
+        <span class="smiley-icons vector-he" data-info="pointing him.." data-value="he"></span>
+        <span class="smiley-icons vector-imout" data-info="i m out.." data-value="imout"></span>
+        <span class="smiley-icons vector-man" data-info="man" data-value="man"></span>
+        <span class="smiley-icons vector-woman" data-info="woman" data-value="woman"></span>
+        <span class="smiley-icons vector-couple" data-info="couple" data-value="couple"></span>
+      </div>
+      <div class="modal-footer smiley-meaning col-xs-12">
+        <small>no selection..</small>
+      </div>
+    </div>
+  </div>
+</section>
+<div id="hidden-element" class="hidden-element"></div>
 {{#if isNewUser}}
-<div class="col-xs-12">
+<div class="new-user-info-popup col-xs-12">
   <!-- Modal popup -->
   <section id="userId-popup" class="modal modal-userId fade" role="dialog">
     <div class="modal-dialog">
@@ -115,7 +180,7 @@
         <div class="modal-body col-xs-12">
           <p>Dear <strong>{{isNewUser}},</strong>
           <p>Greeting from Windbag.</p><br>
-          <p>Here's your user id - <strong>{{loggedInUser}}</strong>. Please make a note as you can use it for future login(s).</p><br>
+          <p>Here's your user id - <strong class="selectable">{{loggedInUser}}</strong>. Please make a note as you can use it for future login(s).</p><br>
           <small> - Windbag Support Team </small>
         </div>
         <div class="modal-footer col-xs-12">
@@ -129,5 +194,6 @@
 <script>
   $(document).ready(function(){
     $('#userId-popup').modal('show');
+    checkUserIdForChat();
   });
 </script>
