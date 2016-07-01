@@ -38,7 +38,7 @@ var express = require('express'),
 /*Global variable*/
 global.errorMessage = null;
 global.newUser = null;
-global.url = 'mongodb://localhost:27017/chat_app';
+global.url = 'mongodb://root:root@ds011735.mlab.com:11735/chat_windbag_app';
 global.MongoClient = require('mongodb').MongoClient;
 
 //generic method to check if given variable has some value
