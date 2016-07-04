@@ -7,6 +7,7 @@ var smileySymbols = [
   ":d",
   ":p",
   ":P",
+  ":^)",
   "man",
   "woman",
   "couple",
@@ -26,7 +27,7 @@ var smileySymbols = [
   "supercool",
   "angry",
   "red",
-  "deviltease",
+  "devil",
   "devilanger",
   "shocked",
   "amazed",
@@ -55,17 +56,6 @@ var smileySymbols = [
   "yes",
   "right"
 ]
-
-var outOfWindow = false;
-$(window).focus(function() {
-  if (!outOfWindow)
-    outOfWindow = true;
-});
-
-$(window).blur(function() {
-  if (outOfWindow)
-    outOfWindow = false;
-});
 
 //scroll page till bottom
 $(document).ready(function() {
@@ -231,14 +221,19 @@ $('#btn-send-message').on("click", function () {
     $('.temp-vector').removeClass('temp-vector');
   }
   else {
-    content = content.replace(":)", "<span class='small-vector vector-smile'></span>");
-    content = content.replace(":(", "<span class='small-vector vector-sad'></span>");
-    content = content.replace(";(", "<span class='small-vector vector-cry'></span>");
-    content = content.replace(";)", "<span class='small-vector vector-wink'></span>");
-    content = content.replace(":D", "<span class='small-vector vector-laugh'></span>");
-    content = content.replace(":d", "<span class='small-vector vector-happy'></span>");
-    content = content.replace(":p", "<span class='small-vector vector-tongue'></span>");
-    content = content.replace(":P", "<span class='small-vector vector-cheeky'></span>");
+    var smileyClass = "";
+    if(content.length > 2) {
+      smileyClass = "small-vector";
+    }
+    content = content.replace(":)", "<span class='vector-smile " + smileyClass + "'></span>");
+    content = content.replace(":(", "<span class='vector-sad " + smileyClass + "'></span>");
+    content = content.replace(";(", "<span class='vector-cry " + smileyClass + "'></span>");
+    content = content.replace(";)", "<span class='vector-wink " + smileyClass + "'></span>");
+    content = content.replace(":D", "<span class='vector-laugh " + smileyClass + "'></span>");
+    content = content.replace(":d", "<span class='vector-happy " + smileyClass + "'></span>");
+    content = content.replace(":p", "<span class='vector-tongue " + smileyClass + "'></span>");
+    content = content.replace(":P", "<span class='vector-cheeky " + smileyClass + "'></span>");
+    content = content.replace(":^)", "<span class='vector-wonderhappy " + smileyClass + "'></span>");
     $('#hidden-element').html(content);
   }
   msg.content = $('#hidden-element').html();

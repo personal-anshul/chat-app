@@ -130,7 +130,7 @@ socket.on('update all users', function (data, pendingChat) {
 //socket handler to load chats
 socket.on('event of chat on server', function (data) {
   //notification related code
-  if((readCode($('#loggedIn-user').attr('data-info')) == data.toUser.trim() && readCode($('#chat-with-user-info').attr("data-info")) != data.fromUser.trim()) || !outOfWindow ) {
+  if(readCode($('#loggedIn-user').attr('data-info')) == data.toUser.trim() && readCode($('#chat-with-user-info').attr("data-info")) != data.fromUser.trim()) {
     if(data.content != null && readCode($('#loggedIn-user').attr('data-info')) == data.toUser.trim()) {
       $('#file-received-notification .span-user').html(data.fromUser);
       $('#file-received-notification .span-msg').html(data.content);

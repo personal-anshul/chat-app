@@ -63,6 +63,23 @@ global.getCode = function(stringData) {
   return code;
 }
 
+//decryption
+global.readCode = function(stringData) {
+  var series = "1325849170636298",
+    alphabets = "qwertyuiopasdfghjklzxcvbnm_1234567890!@#%^&*",
+    code = "", temp;
+  for(i = 0, j = 0; i < stringData.length; i++, j++) {
+    if(stringData[i] == "$") {
+      temp = stringData[++i];
+    }
+    else {
+      temp = alphabets[parseInt(alphabets.indexOf(stringData[i])) - parseInt(series[j])];
+    }
+    code = code + temp;
+  }
+  return code;
+}
+
 // initializing express-session middleware
 var Session = require('express-session');
 var SessionStore = require('session-file-store')(Session);
@@ -197,7 +214,7 @@ app.post('/', function (req, res) {
           if(user) {
             if(bcrypt.compareSync(password, user.password)) {
               if(user.isConnected == 1) {
-                global.errorMessage = 'Already connected in other browser. please disconnect that before.';
+                global.errorMessage = 'Already connected in other browser. Please disconnect that before.';
                 res.redirect('/');
               }
               else {
