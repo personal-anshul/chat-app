@@ -72,6 +72,10 @@ $('html').on('contextmenu', function(){
   return false;
 });
 
+$('#user-name').on('blur', function () {
+  // $('#user-name').
+});
+
 //hide/close user list when ESC is pressed
 $(window).on('keyup', function (event) {
   if(event.keyCode == 27) {
@@ -144,13 +148,14 @@ $('.closePopup').on("click", function () {
 //Select user to start chat
 $('#nav-user-list').delegate('li', 'click', function(elm) {
   var userInfo = $(this).attr('data-value').trim();
-  if(readCode($('#chat-with-user-info').attr("data-info")) != readCode($(this).attr("data-info"))) {
+  if($('#chat-with-user-info').attr("data-info") != $(this).attr("data-info")) {
     $('li').removeClass('active');
     $('#messages').html('');
     $('#input-message').val('');
     $('#btn-send-message, #btn-attachment, #btn-smiley, #input-message').removeAttr('disabled');
     $('.spinner').show();
     $('#user-list').removeClass('in');
+    $('#chat-with-user-info').attr("data-info", $(this).attr("data-info"));
     $(this).addClass('active');
     socket.emit('load related chat', userInfo);
   }
@@ -237,17 +242,17 @@ $('#btn-send-message').on("click", function () {
     $('#hidden-element').html(content);
   }
   msg.content = $('#hidden-element').html();
-  msg.fromUser = readCode($('#loggedIn-user').attr('data-info'));
-  msg.toUser = readCode($('#chat-with-user-info').attr("data-info"));
+  msg.fromUser = $('#loggedIn-user').attr('data-info');
+  msg.toUser = $('#chat-with-user-info').attr("data-info");
   msg.createdOn = new Date().setMinutes(new Date().getMinutes() + 330).valueOf();
-  socket.emit('pending-chat', msg.toUser, msg.fromUser);
   $('#hidden-element').html('');
   if(msg.content !== "") {
     socket.emit('event of chat on client', msg);
+    socket.emit('pending-chat', msg.toUser, msg.fromUser);
     socket.emit('remove typing userinfo');
     if(checkPageStatus()) {
       var chatTime = new Date(msg.createdOn).toJSON().split('T');
-      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + msg.fromUser + ": </b><span class='selectable'>" +  msg.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
+      $('#messages').append($('<p class="col-xs-12">').html("<div class='pull-right para-message'><b>" + $('.userId-detail .user-name').html() + ": </b><span class='selectable'>" +  msg.content + "</span><small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
       $('#input-message').val('');
     }
   }
@@ -287,6 +292,7 @@ $('.load-chat a').on("click", function () {
 
 //get the current display img
 $('#btn-display-picture').on("click", function(event) {
+  $('#invalid-dp').html("");
   $("#dp-preview").fadeIn("fast").attr("src", "/dp/" + $('#user-display-pic').attr('data-info'));
 });
 
@@ -301,9 +307,11 @@ $('#input-attach-dp').on("change", function(event) {
   if(event.target.files[0].type.indexOf('image/') == 0) {
     $("#dp-preview").fadeIn("fast").attr('src', URL.createObjectURL(event.target.files[0]));
     $('#submit-upload-dp').removeAttr("disabled");
+    $("#invalid-dp").html("");
     $("#invalid-dp").html("<p>Voila!! This is how you will look. Nice dp.</p>").removeClass("error-msg");
   }
   else {
+    $("#dp-preview").fadeOut("fast").removeAttr('src');
     $("#invalid-dp").html("<em>Ouch!! It's not a valid image.</em>").addClass("error-msg");
     $('#submit-upload-dp').attr("disabled", "disabled");
   }
@@ -323,9 +331,11 @@ $('#close-upload-dp').on("click", function () {
 $('#textbox-attach-file').on("change", function(event) {
   var tmppath = URL.createObjectURL(event.target.files[0]);
   if(event.target.files[0].type.indexOf('image/') == 0) {
+    $("#no-preview-msg").html("");
     $("#file-uploaded").fadeIn("fast").attr('src', URL.createObjectURL(event.target.files[0]));
   }
   else {
+    $("#file-uploaded").fadeOut("fast").removeAttr('src');
     $("#no-preview-msg").html("<em>Ouch!! Preview is not available.</em>");
   }
   $('#submit-upload-popup').removeAttr("disabled");

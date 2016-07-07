@@ -21,7 +21,7 @@
           </a>
           {{#if loggedInUser}}
           <div class="col-xs-7 user-detail text-right">
-            <h4 class="userId-detail" title={{userName}}({{loggedInUser}})>
+            <h4 class="userId-detail">
               <span id="loggedIn-user" data-info="{{loggedInUserInfo}}">
                 <button type="button" name="button"
                   id="btn-display-picture" class="btn-display-picture"
@@ -29,7 +29,7 @@
                   <img src="" onerror="this.src='/images/no-user.png'" alt="" class="user-display-pic" id="user-display-pic"/>
                 </button>
               </span>
-              {{userNameShort}}
+              <span title={{userEmail}} class="user-name">{{userNameShort}}</span>
               <span class="pipe"> | </span>
               <a href="/logout">logout</a>
             </h4>

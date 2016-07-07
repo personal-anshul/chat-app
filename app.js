@@ -19,21 +19,11 @@ var express = require('express'),
     },
     filename: function (req, file, callback) {
       var fileExtension = file.originalname.split('.'),
-        fileName = req.session.user + "-" + req.query.id + "-" + req.query.span;
+        fileName = getCode(req.session.user) + "-" + req.query.id + "-" + req.query.span;
       callback(null, fileName + "." + fileExtension[fileExtension.length - 1]);
     }
   }),
   upload = multer({ storage : storage}).single('dataFile');
-  storageDp = multer.diskStorage({
-    destination: function (req, file, callback) {
-      callback(null, './public/dp');
-    },
-    filename: function (req, file, callback) {
-      var fileName = req.session.user + "-" + getCode(req.session.user) + "-" + req.query.span;
-      callback(null, fileName);
-    }
-  }),
-  uploadDP = multer({ storage : storageDp}).single('dataFile');
 
 /*Global variable*/
 global.errorMessage = null;
@@ -56,9 +46,11 @@ global.getCode = function(stringData) {
   var series = "1325849170636298",
     alphabets = "qwertyuiopasdfghjklzxcvbnm_1234567890!@#%^&*",
     code = "", temp;
-  for(i = 0; i < stringData.length; i++) {
-    temp = alphabets[parseInt(alphabets.indexOf(stringData[i])) + parseInt(series[i])];
-    code = code + (temp == undefined ? "$" + stringData[i] : temp);
+  if(stringData) {
+    for(i = 0; i < stringData.length; i++) {
+      temp = alphabets[parseInt(alphabets.indexOf(stringData[i])) + parseInt(series[i])];
+      code = code + (temp == undefined ? "$" + stringData[i] : temp);
+    }
   }
   return code;
 }
@@ -68,27 +60,39 @@ global.readCode = function(stringData) {
   var series = "1325849170636298",
     alphabets = "qwertyuiopasdfghjklzxcvbnm_1234567890!@#%^&*",
     code = "", temp;
-  for(i = 0, j = 0; i < stringData.length; i++, j++) {
-    if(stringData[i] == "$") {
-      temp = stringData[++i];
+  if(stringData) {
+    for(i = 0, j = 0; i < stringData.length; i++, j++) {
+      if(stringData[i] == "$") {
+        temp = stringData[++i];
+      }
+      else {
+        temp = alphabets[parseInt(alphabets.indexOf(stringData[i])) - parseInt(series[j])];
+      }
+      code = code + temp;
     }
-    else {
-      temp = alphabets[parseInt(alphabets.indexOf(stringData[i])) - parseInt(series[j])];
-    }
-    code = code + temp;
   }
   return code;
 }
 
 // initializing express-session middleware
-var Session = require('express-session');
-var SessionStore = require('session-file-store')(Session);
-var session = Session({
-  store: new SessionStore({path: __dirname + '/tmp/sessions'}),
-  secret: '!@#456123$%^789&*()',
-  resave: true,
-  saveUninitialized: true
-});
+var Session = require('express-session'),
+  SessionStore = require('session-file-store')(Session);
+  session = Session({
+    store: new SessionStore({path: __dirname + '/tmp/sessions'}),
+    secret: '!@#456123$%^789&*()',
+    resave: true,
+    saveUninitialized: true
+  }),
+  storageDp = multer.diskStorage({
+    destination: function (req, file, callback) {
+      callback(null, './public/dp');
+    },
+    filename: function (req, file, callback) {
+      var fileName = req.session.user + "-" + getCode(req.session.user) + "-" + req.query.span;
+      callback(null, fileName);
+    }
+  }),
+  uploadDP = multer({ storage : storageDp}).single('dataFile');
 
 // view engine setup
 app.set('port', 1992);
@@ -148,7 +152,7 @@ app.post('/api/dp', function(req,res){
 //post request to download data file
 app.get('/download', function(req, res){
   var file = __dirname + "/uploads/";
-  if(req.query.id == req.session.user || req.query.name == req.session.user) {
+  if(req.query.id == getCode(req.session.user) || req.query.name == getCode(req.session.user)) {
     file = file + req.query.id + "-" + req.query.name + "-" + req.query.span + "." + req.query.type;
   }
   //provide file name
@@ -178,7 +182,7 @@ app.post('/', function (req, res) {
       if(!isValid(users.userId)) {
         collection.findOne({"$query": {}, "$orderby": {"_id": -1}}, function(err, user) {
           var tempId = parseInt(user.userId.toString().indexOf('_') == -1 ? 0 : user.userId.split('_')[1]) + 1;
-          users.userId = users.name + "_" + tempId;
+          users.userId = users.name.split(' ')[0] + "_" + tempId;
           collection.insert({
             _id: (new Date().valueOf() * 2) + "",
             userId: users.userId,
@@ -196,11 +200,16 @@ app.post('/', function (req, res) {
                 global.errorMessage = 'Email already exists, please login with the same.';
                 res.redirect('/');
               }
+              else {
+                global.errorMessage = 'Something went wrong.';
+                res.redirect('/');
+              }
             }
             else {
               console.info("user inserted into db: " + users.userId);
               req.session.user = users.userId;
               global.newUser = users.name;
+              req.session.userEmail = users.email;
               req.session.newUser = users.name;
               res.redirect('/chat');
             }
@@ -219,21 +228,22 @@ app.post('/', function (req, res) {
               }
               else {
                 db.collection('user_info').update(
-                  { "userId": users.userId },
+                  { $or: [{userId: users.userId}, {email: users.userId}] },
                   { $set:
                     {
-                      "isConnected": 1,
+                      isConnected: 1,
                       lastConnected: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
                     }
                   },
                   function(err, success) {
+                    global.errorMessage = "";
+                    users.name = user.userName;
+                    req.session.user = user.userId;
+                    req.session.newUser = users.name;
+                    req.session.userEmail = user.email;
+                    res.redirect('/chat');
                   }
                 );
-                global.errorMessage = "";
-                users.name = user.userName;
-                req.session.user = user.userId;
-                req.session.newUser = users.name;
-                res.redirect('/chat');
               }
             }
             else {
@@ -262,7 +272,7 @@ ioSocket.on('connection', function (socket) {
       console.warn(err.message);
     }
     else {
-      if(socket.handshake.session.user) {
+      if(socket.handshake.session) {
         db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
           if(user) {
             socket.emit('remove users from list');
@@ -289,12 +299,12 @@ ioSocket.on('connection', function (socket) {
                         "$query": { "userTo": socket.handshake.session.user, "userFrom": user.userId }},
                         function(err, data) {
                           if(data) {
-                            socket.emit('load all users', user, data.pendingChat);
-                            socket.broadcast.emit('update all users', user);
+                            socket.emit('load all users', getCode(user.userId), user, data.pendingChat);
+                            socket.broadcast.emit('update all users', getCode(user.userId), user);
                           }
                           else {
-                            socket.emit('load all users', user, 0);
-                            socket.broadcast.emit('update all users', user);
+                            socket.emit('load all users', getCode(user.userId), user, 0);
+                            socket.broadcast.emit('update all users', getCode(user.userId), user);
                           }
                         }
                       );
@@ -305,14 +315,9 @@ ioSocket.on('connection', function (socket) {
             );
           }
           else {
-            socket.emit('user session is expired', socket.handshake.session.user);
-            delete socket.handshake.session.user;
+            // socket.emit('user session is expired', getCode(socket.handshake.session.user));
           }
         });
-      }
-      else {
-        socket.emit('user session is expired', socket.handshake.session.user);
-        delete socket.handshake.session.user;
       }
     }
   });
@@ -329,33 +334,34 @@ ioSocket.on('connection', function (socket) {
           { "userId": socket.handshake.session.user },
           { $set:
             {
-              "isConnected": 0,
+              isConnected: 0,
               lastConnected: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
             }
           },
           function(err, success) {
             var userStream = db.collection('user_info').find().sort({"userName": 1}).stream();
             userStream.on('data', function (user) {
-              socket.broadcast.emit('update all users', user);
+              socket.broadcast.emit('update all users', getCode(user.userId), user);
             });
+            console.info((socket.handshake.session.user ? socket.handshake.session.user : 'anonymous_user') + ' disconnected..');
+            delete socket.handshake.session.user;
           }
         );
       }
     });
-    console.info((socket.handshake.session.user ? socket.handshake.session.user : 'anonymous_user') + ' disconnected..');
   });
 
   //event handler to broadcast info of user who is typing
   socket.on('get typing userinfo', function () {
     var userTyping = socket.handshake.session.user,
       userTypingFor = socket.handshake.session.friend;
-    socket.broadcast.emit('update typing userinfo', userTyping, userTypingFor);
+    socket.broadcast.emit('update typing userinfo', getCode(userTyping), getCode(userTypingFor), userTyping.split('_')[0]);
   });
 
   // remove typing userinfo once he/she moves out of textbox
   socket.on('remove typing userinfo', function () {
     var userTypingFor = socket.handshake.session.friend;
-    socket.broadcast.emit('update typing userinfo', null, userTypingFor);
+    socket.broadcast.emit('update typing userinfo', null, getCode(userTypingFor), null);
   });
 
   //event handler to load chat messages related to selected user
@@ -369,14 +375,21 @@ ioSocket.on('connection', function (socket) {
         if(socket.handshake.session.user) {
           db.collection('user_info').findOne({"$query": {"_id": friendUserId}}, function(err, user) {
             if(user) {
-              socket.emit('load dp', user.dpName, user.userId);
               socket.handshake.session.friend = user.userId;
               var lastSeen = new Date(user.lastConnected).toJSON().split('T');
               var localDate = new Date().setMinutes(new Date().getMinutes() + 330);
-              var userData = user.userId + ((user.isConnected == 1) ? "<br><small class='user-last-seen'>Online</small>" : ("<br><small class='user-last-seen'>last seen at " + (lastSeen[0] == new Date(localDate).toJSON().split('T')[0] ? "today" : lastSeen[0]) + " " + lastSeen[1].slice(0,5) + "</small>"));
-              socket.emit('load user details for chat', userData, socket.handshake.session.user);
+              var userData = "<span class='user-name' title='" + user.email + "'>" + user.userName + "</span>" + ((user.isConnected == 1) ? "<br><small class='user-last-seen'>Online</small>" : ("<br><small class='user-last-seen'>last seen at " + (lastSeen[0] == new Date(localDate).toJSON().split('T')[0] ? "today" : lastSeen[0]) + " " + lastSeen[1].slice(0,5) + "</small>"));
+              socket.emit('load user details for chat', userData, getCode(socket.handshake.session.user));
+              socket.emit('load dp', user.dpName, getCode(user.userId));
               socket.broadcast.emit('is user typing?');
-              var collection = db.collection('chat_msg'),
+              var chatObj = {
+                  content: null,
+                  toUser: null,
+                  fromUser: null,
+                  fileType: null,
+                  createdOn: null
+                },
+                collection = db.collection('chat_msg'),
                 cursor = collection.find({
                   $or : [
                     {"toUser": socket.handshake.session.friend, "fromUser": socket.handshake.session.user},
@@ -398,13 +411,18 @@ ioSocket.on('connection', function (socket) {
                   }
                   stream = c < 10 ? cursor.stream() : cursor.skip(c-10).limit(10).stream();
                   stream.on('data', function (chat) {
-                    socket.emit('event of chat on server', chat);
+                    chatObj.content = chat.content;
+                    chatObj.toUser = getCode(chat.toUser);
+                    chatObj.fromUser = getCode(chat.fromUser);
+                    chatObj.fileType = chat.fileType;
+                    chatObj.createdOn = chat.createdOn;
+                    socket.emit('event of chat on server', chatObj, chat.fromUser.split('_')[0], chat.toUser.split('_')[0]);
                   });
                   db.collection('pending_chat').update(
                     { "userTo": socket.handshake.session.user, "userFrom": socket.handshake.session.friend },
                     { $set: { "pendingChat": 0 } },
                     function(err, success) {
-                      socket.emit('update notification count', socket.handshake.session.user, socket.handshake.session.friend);
+                      socket.emit('update notification count', getCode(socket.handshake.session.user), getCode(socket.handshake.session.friend));
                     }
                   );
                 }
@@ -412,14 +430,12 @@ ioSocket.on('connection', function (socket) {
               socket.emit('hide spinner');
             }
             else {
-              socket.emit('user session is expired', socket.handshake.session.user);
-              delete socket.handshake.session.user;
+              // socket.emit('user session is expired', getCode(socket.handshake.session.user));
             }
           });
         }
         else {
-          socket.emit('user session is expired', socket.handshake.session.user);
-          delete socket.handshake.session.user;
+          socket.emit('logout user');
         }
       }
     });
@@ -433,7 +449,7 @@ ioSocket.on('connection', function (socket) {
         console.warn(err.message);
       }
       else {
-        if(socket.handshake.session.user) {
+        if(socket.handshake.session) {
           db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
             if(user) {
               var stream = db.collection('chat_msg').find({
@@ -441,28 +457,38 @@ ioSocket.on('connection', function (socket) {
                     {"toUser": socket.handshake.session.friend, "fromUser": socket.handshake.session.user},
                     {"fromUser": socket.handshake.session.friend, "toUser": socket.handshake.session.user}
                   ]
-                }).sort({ createdOn: 1}).stream();
+                }).sort({ createdOn: 1}).stream(),
+                chatObj = {
+                  content: null,
+                  toUser: null,
+                  fromUser: null,
+                  fileType: null,
+                  createdOn: null
+                };
               stream.on('data', function (chat) {
-                socket.emit('event of chat on server', chat);
+                chatObj.content = chat.content;
+                chatObj.toUser = getCode(chat.toUser);
+                chatObj.fromUser = getCode(chat.fromUser);
+                chatObj.fileType = chat.fileType;
+                chatObj.createdOn = chat.createdOn;
+                socket.emit('event of chat on server', chatObj, chat.fromUser.split('_')[0], chat.toUser.split('_')[0]);
               });
               db.collection('pending_chat').update(
                 { "userTo": socket.handshake.session.user, "userFrom": socket.handshake.session.friend },
                 { $set: { "pendingChat": 0 } },
                 function(err, success) {
-                  socket.emit('update notification count', socket.handshake.session.user, socket.handshake.session.friend);
+                  socket.emit('update notification count', getCode(socket.handshake.session.user), getCode(socket.handshake.session.friend));
                 }
               );
               socket.emit('hide spinner');
             }
             else {
-              socket.emit('user session is expired', socket.handshake.session.user);
-              delete socket.handshake.session.user;
+              // socket.emit('user session is expired', getCode(socket.handshake.session.user));
             }
           });
         }
         else {
-          socket.emit('user session is expired', socket.handshake.session.user);
-          delete socket.handshake.session.user;
+          socket.emit('logout user');
         }
       }
     });
@@ -492,19 +518,17 @@ ioSocket.on('connection', function (socket) {
                 }
                 else {
                   console.info("chat message inserted into db: " + message.content);
-                  socket.broadcast.emit('event of chat on server', message);
+                  socket.broadcast.emit('event of chat on server', message, socket.handshake.session.user.split('_')[0], socket.handshake.session.friend.split('_')[0]);
                 }
               });
             }
             else {
-              socket.emit('user session is expired', socket.handshake.session.user);
-              delete socket.handshake.session.user;
+              // socket.emit('user session is expired', getCode(socket.handshake.session.user));
             }
           });
         }
         else {
-          socket.emit('user session is expired', socket.handshake.session.user);
-          delete socket.handshake.session.user;
+          socket.emit('logout user');
         }
       }
     });
@@ -517,19 +541,21 @@ ioSocket.on('connection', function (socket) {
         console.warn(err.message);
       }
       else {
-        var collection = db.collection('pending_chat');
-        collection.findOne({"$query": { "userTo": userTo, "userFrom": userFrom }}, function(err, data) {
+        var collection = db.collection('pending_chat'),
+          toUser = readCode(userTo),
+          fromUser = readCode(userFrom);
+        collection.findOne({"$query": { "userTo": toUser, "userFrom": fromUser }}, function(err, data) {
           if(data) {
             collection.update(
-              { "userTo": userTo, "userFrom": userFrom },
+              { "userTo": toUser, "userFrom": fromUser },
               { $set: { "pendingChat": parseInt(data.pendingChat) + 1 } },
               function(err, success) { }
             );
           }
           else {
             collection.insert({
-              userTo: userTo,
-              userFrom: userFrom,
+              userTo: toUser,
+              userFrom: fromUser,
               pendingChat: 1,
               createdOn: new Date().setMinutes(new Date().getMinutes() + 330).valueOf()
             },
@@ -549,7 +575,7 @@ ioSocket.on('connection', function (socket) {
 
   //update DP of friend
   socket.on('update dp', function (currentDateTime) {
-    if(socket.handshake.session.user) {
+    if(socket.handshake.session) {
       global.MongoClient.connect(global.url, function (err, db) {
         if(err){
           console.warn(err.message);
@@ -564,15 +590,14 @@ ioSocket.on('connection', function (socket) {
                 { $set: { "dpName": dpName} },
                 function(err, success) {
                   collection.find().stream().on('data', function (user) {
-                    socket.broadcast.emit('update dp of user list', user);
+                    socket.broadcast.emit('update dp of user list', user, getCode(user.userId));
                   });
                 }
               );
-              socket.broadcast.emit('dp changed', dpName, socket.handshake.session.user);
+              socket.broadcast.emit('dp changed', dpName, getCode(socket.handshake.session.user));
             }
             else {
-              socket.emit('user session is expired', socket.handshake.session.user);
-              delete socket.handshake.session.user;
+              // socket.emit('user session is expired', getCode(socket.handshake.session.user));
             }
           });
         }
@@ -606,19 +631,17 @@ ioSocket.on('connection', function (socket) {
                 }
                 else {
                   console.info("file received, entry inserted into db.");
-                  socket.broadcast.emit('notify file received', userSent, userReceived, fileType, currentDateTime);
+                  socket.broadcast.emit('notify file received', getCode(userSent), getCode(userReceived), fileType, currentDateTime, userSent.split('_')[0], userReceived.split('_')[0]);
                 }
               });
             }
             else {
-              socket.emit('user session is expired', socket.handshake.session.user);
-              delete socket.handshake.session.user;
+              // socket.emit('user session is expired', getCode(socket.handshake.session.user));
             }
           });
         }
         else {
-          socket.emit('user session is expired', socket.handshake.session.user);
-          delete socket.handshake.session.user;
+          socket.emit('logout user');
         }
       }
     });
