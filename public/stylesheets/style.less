@@ -1,7 +1,7 @@
 @import "vector-icons";
 
 body {
-  background: #edeff5 url("/images/background.jpeg") no-repeat fixed center 70px / contain;
+  background: #edeff5 url("/images/background.jpeg") fixed center 70px / contain;
   cursor: default;
   font: 16px "Jura", Helvetica, Arial, sans-serif;
   transition: all 1s linear;
@@ -51,13 +51,14 @@ input {
   }
 }
 .section-greeting {
-  background: #edeff5;
+  background: rgba(152, 197, 218, 0.9);
+  display: none;
   margin-top: 60px;
   padding: 0 20px;
   position: fixed;
   z-index: 1;
   .greeting-user-panel {
-    border-bottom: 10px solid #e1e1e1;
+    border-bottom: 10px solid #312d38;
     margin-bottom: 1px;
     padding: 0 0 5px;
   }
@@ -139,16 +140,16 @@ input {
   animation: spin-resize 0.8s ease-in-out;
   height: 100%;
   margin-top: 105px;
-  opacity: 0.85;
+  opacity: 0.95;
   overflow: visible;
   width: 100%;
   transition: all 1s linear;
 }
 .login-panel {
-  animation: bounce 0.8s ease-in-out;
+  animation: tilt-effect 0.6s ease-in-out;
   height: 100%;
   margin-top: 105px;
-  opacity: 0.85;
+  opacity: 0.95;
   overflow: visible;
   width: 100%;
   transition: all 1s linear;
@@ -157,7 +158,7 @@ input {
   margin-right: 20px;
 }
 .footer {
-  background: #fff;
+  background: rgba(0,0,0,0.7);
   border-top: 1px solid #AEB6BF;
   bottom: 0;
   padding: 0 10px 10px;
@@ -170,7 +171,7 @@ input {
     width: 100%;
   }
   .btn-send-message {
-    background: transparent;
+    background: #b3deff;
     border: 1px solid #3086ec;
     border-radius: 0;
     float: left;
@@ -183,7 +184,7 @@ input {
       border: 1px solid #133c6b;
     }
     &:disabled {
-      background: #acacac;
+      background: #eee;
     }
   }
 }
@@ -191,7 +192,7 @@ input {
   display: none;
 }
 .navbar-header {
-  background: #1d1d1d;
+  border-bottom: 1px solid #1d1d1d;
   float: none;
   .user-detail {
     margin: 12px 0 0;
@@ -215,10 +216,13 @@ input {
     background: darken(#4e7075, 10%) !important;
   }
 }
-.navbar-inverse .navbar-brand {
-  color: #fff;
+.navbar-inverse {
+  .navbar-brand {
+    color: #fff;
+  }
 }
 .navbar-collapse.collapse {
+  background: #252525;
   display: none!important;
   &.in{
     display:block !important;
@@ -372,7 +376,7 @@ input {
   z-index: 5000;
 }
 .no-chat {
-  background: rgba(234, 201, 244, 0.5);
+  background: rgba(234, 201, 244, 0.9);
   border: 1px solid #8d00b7;
   border-radius: 5px;
   box-shadow: 2px 1px 5px #A55CBB;
@@ -677,6 +681,9 @@ input {
 .user-name {
   text-transform: capitalize;
 }
+.default-text-transform {
+  text-transform: inherit;
+}
 
 @keyframes spin {
   from { transform: rotate(0deg); }
@@ -685,6 +692,11 @@ input {
 @keyframes spin-resize {
   from { transform: scale(0) rotate(0deg); }
   to { transform: scale(1) rotate(360deg); }
+}
+@keyframes tilt-effect {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
 }
 @keyframes bounce {
   50% {

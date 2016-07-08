@@ -32,6 +32,7 @@ socket.on('load user details for chat', function (userDetail, currentUser) {
   if($('#loggedIn-user').attr('data-info') == currentUser) {
     $('.display-picture').css({"display": "inline-block"});
     $('#chat-with-user-info').html(userDetail);
+    $('#section-greeting').css('display', 'block');
   }
 });
 
