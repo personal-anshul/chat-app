@@ -12,18 +12,23 @@ exports.chatMsg = function(req, res) {
       else {
         var collection = db.collection('user_info');
         collection.findOne({"$query": {"userId": user}}, function(err, isUser) {
-          if(isUser) {
+          if(isUser && isUser.isConnected) {
             var isNewUser = global.newUser;
             global.newUser = null;
             res.render('chat', {
               title: 'Windbag',
               loggedInUser: user,
               loggedInUserInfo: global.getCode(user),
-              userName: req.session.newUser,
+              userEmail: req.session.userEmail,
               userNameShort: (req.session.newUser.length > 10 ? req.session.newUser.slice(0,10) + "..." : req.session.newUser),
               isNewUser: isNewUser,
               typingUser: global.userInfoTyping
             });
+          }
+          else if(isUser && isUser.isConnected == 0) {
+            global.errorMessage = "You are logged out.";
+            req.session.destroy();
+            res.redirect('/');
           }
           else {
             global.errorMessage = "User has been removed by Admin.";

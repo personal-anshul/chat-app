@@ -1,35 +1,6 @@
 //dependencies
 var socket = io();
 
-//encryption
-function getCode(stringData) {
-  var series = "1325849170636298",
-    alphabets = "qwertyuiopasdfghjklzxcvbnm_1234567890!@#%^&*",
-    code = "", temp;
-  for(i = 0; i < stringData.length; i++) {
-    temp = alphabets[parseInt(alphabets.indexOf(stringData[i])) + parseInt(series[i])];
-    code = code + (temp == undefined ? "$" + stringData[i] : temp);
-  }
-  return code;
-}
-
-//decryption
-function readCode(stringData) {
-  var series = "1325849170636298",
-    alphabets = "qwertyuiopasdfghjklzxcvbnm_1234567890!@#%^&*",
-    code = "", temp;
-  for(i = 0, j = 0; i < stringData.length; i++, j++) {
-    if(stringData[i] == "$") {
-      temp = stringData[++i];
-    }
-    else {
-      temp = alphabets[parseInt(alphabets.indexOf(stringData[i])) - parseInt(series[j])];
-    }
-    code = code + temp;
-  }
-  return code;
-}
-
 //get query string from url
 function getParameterByName(name, url) {
   if (!url) {
@@ -54,9 +25,10 @@ function checkUserIdForChat() {
     //remove query string info
     history.pushState(null, "Windbag", "chat");
     setTimeout(function () {
-      var user = $('li[data-info="' + getCode(id) + '"]').attr('data-value');
-      $('li[data-info="' + getCode(id) + '"]').addClass('active');
+      var user = $('li[data-info="' + id + '"]').attr('data-value');
+      $('li[data-info="' + id + '"]').addClass('active');
       $('#input-message').val('');
+      $('#chat-with-user-info').attr("data-info", id);
       $('#btn-send-message, #btn-attachment, #btn-smiley, #input-message').removeAttr('disabled');
       socket.emit('load related chat', user);
       $('.spinner').hide();
@@ -84,7 +56,7 @@ function addUserInURL(e) {
       currentDateTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf();
     if(fileType.length == 2) {
       document.getElementById("uploadForm").method = "post";
-      document.getElementById("uploadForm").action = "/api/photo?id=" + readCode($('#chat-with-user-info').attr("data-info")) + "&span=" + currentDateTime;
+      document.getElementById("uploadForm").action = "/api/photo?id=" + $('#chat-with-user-info').attr("data-info") + "&span=" + currentDateTime;
       socket.emit('file received', fileType[1], currentDateTime);
       setTimeout(function() {
         $('#submit-form').click();
@@ -107,7 +79,7 @@ function uploadDisplayImage() {
     var fileType = document.getElementById('input-attach-dp').value.split('.'),
       currentDateTime = new Date(new Date().setMinutes(new Date().getMinutes() + 330)).valueOf();
     if(fileType.length == 2) {
-      document.getElementById("uploadDp").action = "/api/dp?span=" + currentDateTime + "&id=" + readCode($('#chat-with-user-info').attr('data-info'));
+      document.getElementById("uploadDp").action = "/api/dp?span=" + currentDateTime + "&id=" + $('#chat-with-user-info').attr('data-info');
       socket.emit('update dp', currentDateTime);
       setTimeout(function() {
         $('#submit-dp-form').click();
