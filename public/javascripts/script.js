@@ -63,6 +63,11 @@ window.onpopstate = function(e) {
   window.history.forward();
 };
 
+//Suppress browser's default right click menu
+$('html').on('contextmenu', function(){
+  return false;
+});
+
 //hide/close user list when ESC is pressed
 $(window).on('keyup', function (event) {
   if(event.keyCode == 27) {
