@@ -275,7 +275,7 @@ ioSocket.on('connection', function (socket) {
       if(socket.handshake.session) {
         db.collection('user_info').findOne({"$query": {"userId": socket.handshake.session.user}}, function(err, user) {
           if(user) {
-            socket.emit('remove users from list');
+            // socket.emit('remove users from list');
             db.collection('user_info').update(
               { "userId": socket.handshake.session.user },
               { $set:
@@ -299,11 +299,11 @@ ioSocket.on('connection', function (socket) {
                         "$query": { "userTo": socket.handshake.session.user, "userFrom": user.userId }},
                         function(err, data) {
                           if(data) {
-                            socket.emit('load all users', getCode(user.userId), user, data.pendingChat);
+                            socket.emit('load user details in list', getCode(user.userId), user, data.pendingChat);
                             socket.broadcast.emit('update all users', getCode(user.userId), user);
                           }
                           else {
-                            socket.emit('load all users', getCode(user.userId), user, 0);
+                            socket.emit('load user details in list', getCode(user.userId), user, 0);
                             socket.broadcast.emit('update all users', getCode(user.userId), user);
                           }
                         }

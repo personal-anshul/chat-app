@@ -55,12 +55,8 @@ var smileySymbols = [
   "no",
   "yes",
   "right"
-]
-
-//scroll page till bottom
-$(document).ready(function() {
-  window.scrollTo(0, document.body.scrollHeight);
-});
+],
+objDiv = document.getElementById("messages");
 
 //restrict use of browser's back button
 window.onpopstate = function(e) {
@@ -70,10 +66,6 @@ window.onpopstate = function(e) {
 //Suppress browser's default right click menu
 $('html').on('contextmenu', function(){
   return false;
-});
-
-$('#user-name').on('blur', function () {
-  // $('#user-name').
 });
 
 //hide/close user list when ESC is pressed
@@ -256,7 +248,7 @@ $('#btn-send-message').on("click", function () {
       $('#input-message').val('');
     }
   }
-  window.scrollTo(0, document.body.scrollHeight);
+  objDiv.scrollTop = objDiv.scrollHeight;
   return false;
 });
 

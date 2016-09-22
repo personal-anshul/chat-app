@@ -4,6 +4,7 @@ body {
   background: #edeff5 url("/images/background.jpeg") fixed center 70px / contain;
   cursor: default;
   font: 16px "Jura", Helvetica, Arial, sans-serif;
+  overflow: hidden;
   transition: all 1s linear;
   user-select: none;
   -webkit-user-select: none;
@@ -44,6 +45,7 @@ input {
 }
 .header {
   color: #fff;
+  height: 70px;
   .app-title {
     font-family: "Stalemate";
     margin: 0;
@@ -64,9 +66,12 @@ input {
   }
 }
 .main {
-  margin: 150px auto 20px;
+  margin: 94px auto 20px;
+  padding: 0;
   .message-panel {
-    margin: 20px 0 110px;
+    height: 370px;
+    margin: 5px 0 85px;
+    overflow: auto;
     .para-message {
       border: 1px solid #23527c;
       border-radius: 4px;
@@ -139,7 +144,7 @@ input {
 .on-load-login-panel {
   animation: spin-resize 0.8s ease-in-out;
   height: 100%;
-  margin-top: 105px;
+  margin-top: 70px;
   opacity: 0.95;
   overflow: visible;
   width: 100%;
@@ -158,7 +163,7 @@ input {
   margin-right: 20px;
 }
 .footer {
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.25);
   border-top: 1px solid #AEB6BF;
   bottom: 0;
   padding: 0 10px 10px;
@@ -331,12 +336,37 @@ input {
 .loaded-chat {
   margin-top: 23px;
 }
+.user-options {
+  background: #252525;
+  color: #fff !important;
+  margin-top: 70px;
+  text-align: center;
+  position: absolute;
+  right: 0;
+  width: 200px;
+  z-index: 1;
+  .nav > li > a:focus {
+    background-color: inherit;
+    color: #337ab7;
+  }
+}
+.user-list {
+  background: #a9cce3;
+  border-right: 4px solid;
+  height: 100vh;
+  margin-left: -15px;
+  overflow: hidden;
+  padding: 0;
+  position: fixed;
+  top: 70px;
+}
 .user-list-item {
   border-bottom: 1px solid #1d1d1d;
   cursor: pointer;
-  padding: 5px;
+  padding: 10px;
   &:hover {
-    color: #aaa;
+    background: #a7d0d0;
+    color: #555;
   }
 }
 .load-chat {
@@ -381,13 +411,14 @@ input {
   border-radius: 5px;
   box-shadow: 2px 1px 5px #A55CBB;
   color: #5D4764;
+  margin-top: 70px;
   padding: 20px;
 }
 .user-online {
   color: #2ecc71;
 }
 .user-offline {
-  color: #a9cce3;
+  color: #773092;
 }
 .user-typing {
   color: #8d00b7;
@@ -439,8 +470,8 @@ input {
   right: 5px;
 }
 .active {
-  background: #4e7075;
-  color: #fff;
+  background: #8bbcc3;
+  color: #011dff;
 }
 .preview-file-uploaded {
   display: block;
@@ -494,7 +525,7 @@ input {
   display: none;
   height: auto;
   margin-left: 10px;
-  padding: 0 5px;
+  padding: 2px 5px;
   position: relative;
   width: auto;
   z-index: 10;
@@ -680,6 +711,11 @@ input {
 }
 .user-name {
   text-transform: capitalize;
+}
+.user-list-name {
+  display: inline-block;
+  vertical-align: middle;
+  &:extend(.user-name);
 }
 .default-text-transform {
   text-transform: inherit;

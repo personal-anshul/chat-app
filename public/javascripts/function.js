@@ -38,10 +38,10 @@ function checkUserIdForChat() {
 
 //check if user is in proper window to get chat msg and chat have already been initiated
 function checkPageStatus() {
-  if($('#messages').html().indexOf('Oops.. There is no chat between you both yet.') != -1) {
+  if($('#messages').html().indexOf('There is no chat between you both yet.') != -1) {
     $('#messages').html('');
   }
-  if($('#messages').html().indexOf('Select user from top right hamgurber menu to start chat with them.') == -1) {
+  if($('#messages').html().indexOf('Select user from list to start chat with them.') == -1) {
     return true;
   }
   else {

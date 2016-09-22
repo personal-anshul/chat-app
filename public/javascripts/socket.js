@@ -3,13 +3,19 @@ socket.on('remove users from list', function() {
   $('#nav-user-list').html('');
 });
 
-//socket handler to load all users
-socket.on('load all users', function (dataInfo, data, pendingChat) {
-  var defaultImg = "onerror='this.src=\"/images/no-user.png\"'";
-  if(dataInfo != $('#loggedIn-user').attr('data-info')) {
-    var statusBar = data.isConnected == 1 ? "<span class='user-status user-online'>Online</span>" : "<span class='user-status user-offline'>Offline</span>";
-    $('#nav-user-list').append('<li class="user-list-item" data-info="' + dataInfo + '" data-value="'+ data._id +'"><img class="user-display-pic" src="/dp/' + data.dpName + '" alt="user"' + defaultImg + '/><span class="user-name">' + data.userName + '</span> (' + data.email + ') - ' + statusBar + '<span class="chat-pending">' + pendingChat + '</span></li>');
-    pendingChat == 0 ? null : $("li[data-info='" + dataInfo + "']" + " span.chat-pending").css({ "display": "inline-block"});
+//socket handler to add user detail in list
+socket.on('load user details in list', function (dataInfo, data, pendingChat) {
+  var defaultImg = "onerror='this.src=\"/images/no-user.png\"'",
+    element = $("li[data-info='" + dataInfo + "']");
+  if(element.length == 1) {
+    return false;
+  }
+  else {
+    if(dataInfo != $('#loggedIn-user').attr('data-info')) {
+      var statusBar = data.isConnected == 1 ? "<span class='user-status user-online'>Online</span>" : "<span class='user-status user-offline'>Offline</span>";
+      $('#nav-user-list').append('<li title="' + data.email + '" class="user-list-item" data-info="' + dataInfo + '" data-value="'+ data._id +'"><img class="user-display-pic" src="/dp/' + data.dpName + '" alt="user"' + defaultImg + '/><div class="user-list-name">' + data.userName + ' - ' + statusBar + '</div><span class="chat-pending">' + pendingChat + '</span><br/><div class="user-list-name">' + data.email + '</div></li>');
+      pendingChat == 0 ? null : $("li[data-info='" + dataInfo + "']" + " span.chat-pending").css({ "display": "inline-block"});
+    }
   }
   if(pendingChat) {
     $('#pending-chat-count').html(parseInt($('#pending-chat-count').html()) + pendingChat);
@@ -48,7 +54,7 @@ socket.on('is user typing?', function () {
 
 //socket handler if there is no chat msg between selected users
 socket.on('no chat to load', function() {
-  $('#messages').html('<h1 class="text-center no-chat">Oops.. There is no chat between you both yet.</h1>');
+  $('#messages').html('<h1 class="text-center no-chat">Surprised..<span class="vector-wondersad"></span><br/>There is no chat between you both yet.</h1>');
 });
 
 //socket handler to show load more chat link
@@ -113,7 +119,7 @@ socket.on('update all users', function (dataInfo, data, pendingChat) {
       var defaultImg = "onerror='this.src=\"/images/no-user.png\"'",
         statusBar = data.isConnected == 1 ? "<span class='user-status user-online'>Online</span>" : "<span class='user-status user-offline'>Offline</span>",
         pendingChat = 0;
-      $('#nav-user-list').append('<li class="user-list-item" data-info="' + dataInfo + '" data-value="'+ data._id +'"><img class="user-display-pic" src="/dp/' + data.dpName + '" alt="user"' + defaultImg + '/><span class="user-name">' + data.userName + '</span> (' + data.email + ') - ' + statusBar + '<span class="chat-pending">' + pendingChat + '</span></li>');
+      $('#nav-user-list').append('<li title="' + data.email + '" class="user-list-item" data-info="' + dataInfo + '" data-value="'+ data._id +'"><img class="user-display-pic" src="/dp/' + data.dpName + '" alt="user"' + defaultImg + '/><div class="user-list-name">' + data.userName + ' - ' + statusBar + '<br/>' + data.email + '</div><span class="chat-pending">' + pendingChat + '</span></li>');
     }
   }
   if(dataInfo == $('#chat-with-user-info').attr("data-info")) {
@@ -176,7 +182,7 @@ socket.on('event of chat on server', function (data, dataInfo, dataTo) {
       }
     }
   }
-  window.scrollTo(0, document.body.scrollHeight);
+  objDiv.scrollTop = objDiv.scrollHeight;
 });
 
 //socket handler to display file received
@@ -209,7 +215,7 @@ socket.on("notify file received", function(userSent, userReceived, fileType, cur
       $('#messages').append($('<p class="col-xs-12">').html("<div class='col-xs-12 file-shared-notification'><span class='user-name'><em>" + dataInfo + "</em></span> has shared a file with you. Click <a class='link-download' target='_blank' href='/download?id=" + userSent + "&name=" + userReceived + "&span=" + currentDateTime + "&type=" + fileType + "'>here</a> to see. <small class='msg-time'>" + chatTime[0] + "," + chatTime[1].split('.')[0] + "</small></div>"));
     }
   }
-  window.scrollTo(0, document.body.scrollHeight);
+  objDiv.scrollTop = objDiv.scrollHeight;
 });
 
 //update notification count if new chat comes
